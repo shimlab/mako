@@ -1,0 +1,75 @@
+<!-- generated via `uvx nf-core schema docs -c parameter,description,default --format html` -->
+
+<h2>Input/output options</h2>
+<p>Define where the pipeline should find input data and save output data.</p>
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Description</th>
+            <th>Default</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>dataset_name</code></td>
+            <td>The name of this dataset, used in output files and within visualisations</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td><code>input</code></td>
+            <td>Path to comma-separated file containing information about the samples in the experiment. TODO: finish
+                samplesheet</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td><code>outdir</code></td>
+            <td>The output directory where the results will be saved. You have to use absolute paths to storage on Cloud
+                infrastructure.</td>
+            <td>results</td>
+        </tr>
+    </tbody>
+</table>
+<h2>Pipeline parameters</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Description</th>
+            <th>Default</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>mod_method</code></td>
+            <td>The method used to call the RNA modification (accepted: <code>dorado</code>|<code>m6anet</code>)</td>
+            <td>dorado</td>
+        </tr>
+        <tr>
+            <td><code>diff_method</code></td>
+            <td>The method used to call differentially expressed sites (accepted: <code>lmer</code>|<code>modkit</code>)
+            </td>
+            <td>lmer</td>
+        </tr>
+        <tr>
+            <td><code>genome</code></td>
+            <td>The reference genome, in .fasta format</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td><code>transcriptome</code></td>
+            <td>The reference transcriptome, in .fasta format</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td><code>min_reads</code></td>
+            <td>Minimum reads needed at a site (across all samples) to be called</td>
+            <td>20</td>
+        </tr>
+        <tr>
+            <td><code>prob_threshold</code></td>
+            <td>Minimum probability detected at a site to be called</td>
+            <td>0</td>
+        </tr>
+    </tbody>
+</table>
