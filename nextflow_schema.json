@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com///nextflow_schema.json",
+  "title": " pipeline parameters",
+  "description": "",
+  "type": "object",
+  "$defs": {
+    "input_output_options": {
+      "title": "Input/output options",
+      "type": "object",
+      "fa_icon": "fas fa-terminal",
+      "description": "Define where the pipeline should find input data and save output data.",
+      "required": ["dataset_name", "input", "outdir"],
+      "properties": {
+        "dataset_name": {
+          "type": "string",
+          "description": "The name of this dataset, used in output files and within visualisations"
+        },
+        "input": {
+          "type": "string",
+          "description": "Path to comma-separated file containing information about the samples in the experiment. TODO: finish samplesheet",
+          "format": "file-path"
+        },
+        "outdir": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
+          "fa_icon": "fas fa-folder-open",
+          "default": "results"
+        }
+      }
+    },
+    "pipeline_parameters": {
+      "title": "Pipeline parameters",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "mod_method": {
+          "type": "string",
+          "default": "dorado",
+          "description": "The method used to call the RNA modification",
+          "enum": ["dorado", "m6anet"]
+        },
+        "diff_method": {
+          "type": "string",
+          "default": "lmer",
+          "enum": ["lmer", "modkit"],
+          "description": "The method used to call differentially expressed sites"
+        },
+        "genome": {
+          "type": "string",
+          "description": "The reference genome, in .fasta format"
+        },
+        "transcriptome": {
+          "type": "string",
+          "description": "The reference transcriptome, in .fasta format"
+        },
+        "min_reads": {
+          "type": "integer",
+          "default": 20,
+          "description": "Minimum reads needed at a site (across all samples) to be called"
+        },
+        "prob_threshold": {
+          "type": "integer",
+          "default": 0,
+          "description": "Minimum probability detected at a site to be called"
+        }
+      },
+      "required": ["genome", "transcriptome", "mod_method", "diff_method"]
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/input_output_options"
+    },
+    {
+      "$ref": "#/$defs/pipeline_parameters"
+    }
+  ],
+  "properties": {
+    "testing": {
+      "type": "boolean",
+      "hidden": true,
+      "description": "Only activated during stub runs"
+    }
+  }
+}
