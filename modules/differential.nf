@@ -33,7 +33,7 @@ process MERGE_TSVS {
     tuple val(mod_caller), path("segment*.tsv")
 
     output:
-    path val(mod_caller), "merged.tsv"
+    tuple val(mod_caller), path("merged.tsv")
 
     script:
     """

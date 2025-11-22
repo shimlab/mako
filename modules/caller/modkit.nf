@@ -1,7 +1,7 @@
 process MODKIT_PILEUP {
     tag "${sample_name}"
     label 'high_cpu'
-    publishDir "${params.outdir}/dorado/modcall/${sample_name}", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/modcall/dorado", mode: params.publish_dir_mode
 
     input:
     tuple val(sample_name), val(group), path("sorted.bam"), path("sorted.bam.bai")
@@ -36,14 +36,14 @@ process MODKIT_PILEUP {
 process MODKIT_EXTRACT {
     tag "${sample_name}"
     label 'high_cpu'
-    publishDir "${params.outdir}/dorado/modcall/${sample_name}", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/modcall/dorado", mode: params.publish_dir_mode
 
     input:
     tuple val(sample_name), val(group), path("sorted.bam"), path("sorted.bam.bai")
     path ref
 
     output:
-    tuple val(sample_name), val(group), path("reads.tsv")
+    tuple val(sample_name), val(group), path("reads_${sample_name}.tsv")
 
     script:
     """
@@ -56,7 +56,7 @@ process MODKIT_EXTRACT {
 
     # Sort reads.tsv by column 4 (chrom), then column 3 (ref_position)
     (head -n 1 reads_unsorted.tsv && \
-     tail -n +2 reads_unsorted.tsv | sort -k4,4 -k3,3n --parallel ${task.cpus}) > reads.tsv
+     tail -n +2 reads_unsorted.tsv | sort -k4,4 -k3,3n --parallel ${task.cpus}) > reads_${sample_name}.tsv
 
     # delete unsorted file to save space
     rm reads_unsorted.tsv
@@ -64,6 +64,6 @@ process MODKIT_EXTRACT {
 
     stub:
     """
-    touch reads.tsv
+    touch reads_${sample_name}.tsv
     """
 }

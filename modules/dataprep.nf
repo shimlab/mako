@@ -76,5 +76,7 @@ process SITE_SELECTION {
     echo "1001,2000" >> segments.csv
     echo "2001,3000" >> segments.csv
     echo "3001,4000" >> segments.csv
+
+    touch selected_sites.db
     """
 }

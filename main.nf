@@ -78,21 +78,20 @@ docs:   https://github.com/shimlab/xxx
 
     modkit_extract_ch = MODKIT_EXTRACT(sorted_bam_ch, file(params.transcriptome))
 
-    aggregated_results_ch = modkit_extract_ch
+    aggregated_results = modkit_extract_ch
         .collectFile(keepHeader: true, skip: 1) {
             ["dorado_extracted_sites.csv","sample_name,group,file_path\n${it[0]},${it[1]},${it[2]}\n"]
         }
     
-    reads_database_ch = PREP_FROM_DORADO(aggregated_results_ch)
+    reads_database_ch = PREP_FROM_DORADO(aggregated_results.map { ["dorado", it] })
         .first() // convert to value channel
 
     segments_ch = SITE_SELECTION(reads_database_ch)
         .flatMap { mod_caller, sites_db, reads_db, segments_file ->
             def seg = segments_file.splitCsv(header: true, sep: ',')
             seg.collect { row -> [mod_caller, sites_db, reads_db, row.start, row.end] }
-            
         }
 
     diff_ch = CALL_MODEL(segments_ch).groupTuple()
-    MERGE_TSVS(diff_ch.view())
+    MERGE_TSVS(diff_ch)
 }
