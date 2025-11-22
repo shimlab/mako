@@ -3,7 +3,7 @@ process CALL_MODEL {
     publishDir "${params.outdir}/differential/${mod_caller}", mode: params.publish_dir_mode
 
     input:
-    tuple val(mod_caller), path(reads_db), path(sites_db), val(start), val(end)
+    tuple val(mod_caller), path(sites_db), path(reads_db), val(start), val(end)
 
     output:
     tuple val(mod_caller), path("segment_modification_differentials.tsv")
