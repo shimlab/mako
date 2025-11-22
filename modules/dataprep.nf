@@ -1,11 +1,12 @@
 process PREP_FROM_DORADO {
     label 'high_cpu'
+    publishDir "${params.outdir}/modcall/${mod_caller}", mode: params.publish_dir_mode
 
     input:
-    path "aggregated_results.csv"
+    tuple val(mod_caller), path("aggregated_results.csv")
 
     output:
-    path "all_sites.duckdb"
+    tuple val(mod_caller), path("all_sites.duckdb")
 
     script:
     """
@@ -47,13 +48,15 @@ process PREP_FROM_M6ANET {
 
 process SITE_SELECTION {
     label 'low_cpu'
+    publishDir "${params.outdir}/differential/${mod_caller}", mode: params.publish_dir_mode
 
     input:
-    path database
+    tuple val(mod_caller), path(database)
 
     output:
-    path "selected_sites.db"
-    path "segments.csv"
+    tuple val(mod_caller), path("selected_sites.db"), path(database), path("segments.csv")
+    // path "selected_sites.db"
+    // path "segments.csv"
 
     script:
     """

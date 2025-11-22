@@ -1,6 +1,7 @@
 process DORADO_BASECALL_ALIGN {
     tag "${sample_name}"
     label 'gpu'
+    publishDir "${params.outdir}/basecall/${sample_name}", mode: params.publish_dir_mode
 
     container "nanoporetech/dorado:shae9327ad17e023b76e4d27cf287b6b9d3a271092b"
 
@@ -29,6 +30,7 @@ process DORADO_BASECALL_ALIGN {
 process SAMTOOLS_SORT_INDEX {
     tag "${sample_name}"
     label 'low_cpu'
+    publishDir "${params.outdir}/basecall/${sample_name}", mode: params.publish_dir_mode
 
     input:
     tuple val(sample_name), val(group), path(bam)
@@ -53,6 +55,7 @@ process SAMTOOLS_SORT_INDEX {
 process SAMTOOLS_FLAGSTAT {
     tag "${sample_name}"
     label 'local'
+    publishDir "${params.outdir}/basecall/${sample_name}", mode: params.publish_dir_mode
 
     input:
     tuple val(sample_name), path("sorted.bam"), path("sorted.bam.bai")

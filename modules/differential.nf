@@ -1,13 +1,12 @@
 process CALL_MODEL {
     label 'single_cpu_long'
+    publishDir "${params.outdir}/differential/${mod_caller}", mode: params.publish_dir_mode
 
     input:
-    path reads_db
-    path sites_db
-    tuple val(start), val(end)
+    tuple val(mod_caller), path(reads_db), path(sites_db), val(start), val(end)
 
     output:
-    path "segment_modification_differentials.tsv"
+    tuple val(mod_caller), path("segment_modification_differentials.tsv")
 
     script:
     """
@@ -28,12 +27,13 @@ process CALL_MODEL {
 
 process MERGE_TSVS {
     label 'local'
+    publishDir "${params.outdir}/differential/${mod_caller}", mode: params.publish_dir_mode
 
     input:
-    path "segment*.tsv"
+    tuple val(mod_caller), path("segment*.tsv")
 
     output:
-    path "merged.tsv"
+    path val(mod_caller), "merged.tsv"
 
     script:
     """

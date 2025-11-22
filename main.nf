@@ -86,18 +86,13 @@ docs:   https://github.com/shimlab/xxx
     reads_database_ch = PREP_FROM_DORADO(aggregated_results_ch)
         .first() // convert to value channel
 
-    (sites_database_ch, segments_file_ch) = SITE_SELECTION(reads_database_ch)
+    segments_ch = SITE_SELECTION(reads_database_ch)
+        .flatMap { mod_caller, sites_db, reads_db, segments_file ->
+            def seg = segments_file.splitCsv(header: true, sep: ',')
+            seg.collect { row -> [mod_caller, sites_db, reads_db, row.start, row.end] }
+            
+        }
 
-    segments_ch = segments_file_ch
-        .splitCsv(header: true, sep: ',')
-        .map { [it.start, it.end] }
-
-    // call the model on each segment
-    diff_ch = CALL_MODEL(
-        reads_database_ch,
-        sites_database_ch,
-        segments_ch
-    )
-
-    MERGE_TSVS(diff_ch.collect())
+    diff_ch = CALL_MODEL(segments_ch).groupTuple()
+    MERGE_TSVS(diff_ch.view())
 }
