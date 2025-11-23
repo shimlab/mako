@@ -78,14 +78,16 @@ docs:   https://github.com/shimlab/xxx
         .map { sample_name, _group, bam -> [sample_name, bam] }
         .set { qc_bam_ch }
 
+    sorted_bam_ch = SAMTOOLS_SORT_INDEX(basecalled_ch)
+
     // post-basecalling QC
     FLAGSTAT(qc_bam_ch)
     FASTQC(qc_bam_ch)
-    NANOPLOT(qc_bam_ch)
-    NANOCOMP(qc_bam_ch.map { v -> v[1] }.collect())
-    
-    // Sort and index BAM files
-    sorted_bam_ch = SAMTOOLS_SORT_INDEX(basecalled_ch)
+
+    NANOPLOT(sorted_bam_ch.map { v -> [v[0], v[2], v[3]] } )
+
+    all_sorted_bams = sorted_bam_ch.collect()
+    NANOCOMP(all_sorted_bams.map { v -> v[2] }, all_sorted_bams.map { v -> v[3] })
 
     modkit_extract_ch = MODKIT_EXTRACT(sorted_bam_ch, file(params.transcriptome))
 

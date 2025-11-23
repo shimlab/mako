@@ -55,14 +55,14 @@ process NANOPLOT {
         'quay.io/biocontainers/nanoplot:1.46.1--pyhdfd78af_0' }"
 
     input:
-    tuple val(sample_name), path(bam)
+    tuple val(sample_name), path("input.bam"), path("input.bam.bai")
     
     output:
     tuple val(sample_name), path("nanoplot")
     
     script:
     """
-    NanoPlot -t ${task.cpus} --bam ${bam} -o nanoplot
+    NanoPlot -t ${task.cpus} --bam input.bam -o nanoplot
     """
 
     stub:
@@ -83,7 +83,8 @@ process NANOCOMP {
 
     input:
     path "sample?.bam"
-    
+    path "sample?.bam.bai"
+
     output:
     path("nanocomp")
     
@@ -95,6 +96,7 @@ process NANOCOMP {
     stub:
     """
     mkdir nanocomp
+    echo \$(ls) > nanocomp/listing.txt
     touch nanocomp/dummy.txt
     """
 }
