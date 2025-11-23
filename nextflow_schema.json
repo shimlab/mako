@@ -44,14 +44,13 @@
         "mod_caller": {
           "type": "string",
           "default": "dorado",
-          "description": "The method used to call the RNA modification",
+          "description": "The method used to call the RNA modification. Options: dorado. m6Anet support is coming soon!",
           "enum": ["dorado", "m6anet"]
         },
         "differential_model": {
           "type": "string",
           "default": "homo_norm",
-          "enum": ["binomial", "beta-binomial", "homo_norm", "hetero_norm"],
-          "description": "The model to use to call differentially modified sites"
+          "description": "The model to use to call differentially modified sites, as a comma-separated list. Options: homo_norm, hetero_norm, binomial, beta_binomial"
         },
         "transcriptome": {
           "type": "string",

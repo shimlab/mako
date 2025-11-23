@@ -60,6 +60,9 @@ docs:   https://shimlab.github.io/mako
             }
           }
 
+    // parse differential model
+    differential_models_ch = channel.from(params.differential_model.tokenize(",")).map { it -> it.trim() }
+
     // TODO: add m6anet support
     
     samples_split_ch = samples_ch.branch { row ->
@@ -106,6 +109,11 @@ docs:   https://shimlab.github.io/mako
             seg.collect { row -> [mod_caller, sites_db, reads_db, row.start, row.end] }
         }
 
-    diff_ch = CALL_MODEL(segments_ch).groupTuple()
+    // CALL_MODEL produces [A, B, C], groupTuple expects [[A, B], [C]] so we map and unmap accordingly
+    diff_ch = CALL_MODEL(differential_models_ch.combine(segments_ch))
+        .map { it -> [[it[0], it[1]], it[2]] }
+        .groupTuple()
+        .map { it -> [it[0][0], it[0][1], it[1]] }
+
     MERGE_TSVS(diff_ch)
 }
