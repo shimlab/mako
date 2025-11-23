@@ -2,6 +2,7 @@
 **/__pycache__/
 
 results
+results_testing
 work/
 *.err
 *.out

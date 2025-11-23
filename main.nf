@@ -16,7 +16,7 @@ include { CALL_MODEL ; MERGE_TSVS } from './modules/differential'
 include { FLAGSTAT ; FASTQC ; NANOPLOT ; NANOCOMP } from './modules/qc'
 
 // SCHEMA VALIDATION
-include { validateParameters ; paramsSummaryLog } from 'plugin/nf-schema'
+include { validateParameters ; paramsSummaryLog ; paramsHelp } from 'plugin/nf-schema'
 
 
 // Main workflow
@@ -27,21 +27,24 @@ workflow {
     }
 
     // Print workflow info
-    log.info(
-        """\
-Differential RNA modification analysis pipeline
-
+    log.info("""\
+.___  ___.      ___       __  ___   ______   
+|   \\/   |     /   \\     |  |/  /  /  __  \\  
+|  \\  /  |    /  ^  \\    |  '  /  |  |  |  | 
+|  |\\/|  |   /  /_\\  \\   |    <   |  |  |  | 
+|  |  |  |  /  _____  \\  |  .  \\  |  `--'  | 
+|__|  |__| /__/     \\__\\ |__|\\__\\  \\______/  
+                                            
+differential RNA modification calling
 Shim Lab @ University of Melbourne
 
-cite:   xxx
-docs:   https://github.com/shimlab/xxx
-        """
-    )
+docs:   https://shimlab.github.io/mako
+    """)
 
     log.info(paramsSummaryLog(workflow))
 
     // Read samples file
-    samples_ch = Channel.fromPath(params.input)
+    samples_ch = Channel.fromPath(params.samplesheet)
         .splitCsv(header: true, sep: ',')
 
     // Check that there are only TWO groups
@@ -85,9 +88,7 @@ docs:   https://github.com/shimlab/xxx
     FASTQC(qc_bam_ch)
 
     NANOPLOT(sorted_bam_ch.map { v -> [v[0], v[2], v[3]] } )
-
-    all_sorted_bams = sorted_bam_ch.collect()
-    NANOCOMP(all_sorted_bams.map { v -> v[2] }, all_sorted_bams.map { v -> v[3] })
+    NANOCOMP(sorted_bam_ch.map { v -> v[2] }.collect(sort: true), sorted_bam_ch.map { v -> v[3] }.collect(sort: true))
 
     modkit_extract_ch = MODKIT_EXTRACT(sorted_bam_ch, file(params.transcriptome))
 

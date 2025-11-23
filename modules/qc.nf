@@ -1,6 +1,7 @@
 process FLAGSTAT {
     publishDir "${params.outdir}/basecall/${sample_name}", mode: params.publish_dir_mode
     label 'single_cpu'
+    tag "${sample_name}"
 
     input:
     tuple val(sample_name), path(bam)
@@ -22,6 +23,7 @@ process FLAGSTAT {
 process FASTQC {
     publishDir "${params.outdir}/basecall/${sample_name}", mode: params.publish_dir_mode
     label 'single_cpu'
+    tag "${sample_name}"
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/fastqc:0.12.1--hdfd78af_0' :
@@ -49,6 +51,7 @@ process FASTQC {
 process NANOPLOT {
     publishDir "${params.outdir}/basecall/${sample_name}", mode: params.publish_dir_mode
     label 'low_cpu'
+    tag "${sample_name}"
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/nanoplot:1.43.0--pyhdfd78af_1' :
@@ -74,7 +77,7 @@ process NANOPLOT {
 
 process NANOCOMP {
     publishDir "${params.outdir}/basecall", mode: params.publish_dir_mode
-    label 'low_cpu'
+    label 'medium_cpu'
 
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
