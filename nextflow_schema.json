@@ -68,7 +68,7 @@
           "description": "Minimum probability detected at a site to be called"
         }
       },
-      "required": ["mod_method", "transcriptome"]
+      "required": ["differential_model", "transcriptome"]
     }
   },
   "allOf": [
