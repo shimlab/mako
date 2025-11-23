@@ -5,15 +5,123 @@ suppressPackageStartupMessages({
     library(tidyverse)
     library(duckdb)
     library(optparse)
+    library(nlme)
+    library(aod)
 })
 
-# logit transformation
+
+# ==============================
+# Models
+# ==============================
+
+# homoscedastic Gaussian model
+homo_norm_model <- function(transcript_id, transcript_position, df) {
+    model <- lm(logit ~ group_name, data = df)
+    coefs <- summary(model)$coefficients
+
+    result <- data.frame(
+        transcript_id = transcript_id,
+        transcript_position = transcript_position,
+        estimate = coefs[2, "Estimate"],
+        std_err = coefs[2, "Std. Error"],
+        t_value = coefs[2, "t value"],
+        p_value = coefs[2, "Pr(>|t|)"],
+        model_error = NA_character_
+    )
+    
+    return(result)
+}
+
+hetero_norm_model <- function(transcript_id, transcript_position, df) {
+    model <- gls(
+        logit ~ group_name,
+        data = df,
+        weights = varIdent(form = ~ 1 | sample_name), method = "ML"
+    )
+
+    coefs <- summary(model)$tTable
+
+    result <- data.frame(
+        transcript_id = transcript_id,
+        transcript_position = transcript_position,
+        estimate = coefs[2, "Value"],
+        std_err = coefs[2, "Std.Error"],
+        t_value = coefs[2, "t-value"],
+        p_value = coefs[2, "p-value"],
+        model_error = NA_character_
+    )
+    
+    return(result)
+}
+
+binomial_model <- function(transcript_id, transcript_position, df) {
+    agg_df <- df %>%
+        group_by(sample_name, group_name) %>%
+        summarise(
+            successes = sum(probability_modified >= 0.5),
+            failures = sum(probability_modified < 0.5),
+            .groups = "keep"
+        ) %>%
+        ungroup()
+
+    model <- glm(cbind(successes, failures) ~ group_name,
+        data = agg_df,
+        family = binomial
+    )
+
+    coefs <- summary(model)$coefficients
+
+    result <- data.frame(
+        transcript_id = transcript_id,
+        transcript_position = transcript_position,
+        estimate = coefs[2, "Estimate"],
+        std_err = coefs[2, "Std. Error"],
+        t_value = coefs[2, "z value"],
+        p_value = coefs[2, "Pr(>|z|)"],
+        model_error = NA_character_
+    )
+    
+    return(result)
+}
+
+beta_binomial_model <- function(transcript_id, transcript_position, df) {
+    agg_df <- df %>%
+        group_by(sample_name, group_name) %>%
+        summarise(
+            successes = sum(probability_modified >= 0.5),
+            failures = sum(probability_modified < 0.5),
+            .groups = "keep"
+        ) %>%
+        ungroup()
+
+    model <- betabin(cbind(successes, failures) ~ group_name, ~1,
+        data = agg_df
+    )
+
+    coefs <- summary(model)$coefficients
+
+    result <- data.frame(
+        transcript_id = transcript_id,
+        transcript_position = transcript_position,
+        estimate = coefs[2, "Estimate"],
+        std_err = coefs[2, "Std. Error"],
+        t_value = coefs[2, "z value"],
+        p_value = coefs[2, "Pr(> |z|)"],
+        model_error = NA_character_
+    )
+    
+    return(result)
+}
+
+# ==============================
+# Data loading and transformation
+# ==============================
+
 logit <- function(p) {
     eps <- 1e-10
     log((p + eps) / (1 - p + eps))
 }
 
-# Fetch data from database
 fetch_dataframe <- function(start, end, sites_db, reads_db) {
     con <- dbConnect(duckdb(), dbdir = sites_db, read_only = TRUE)
     dbExecute(con, sprintf("ATTACH '%s' AS all_sites (READONLY);", reads_db))
@@ -41,7 +149,9 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
       mutate(
         transcript_id,
         transcript_position,
-        trtGrp = factor(group_name),
+        sample_name,
+        probability_modified,
+        group_name = factor(group_name),
         logit = logit(probability_modified),
         .keep = "none"
       ) %>%
@@ -51,6 +161,42 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
     dbDisconnect(con)
     return(df_nested)
 }
+
+# ==============================
+# Model application
+# ==============================
+
+# Function to apply linear model to each site
+apply_model <- function(transcript_id, transcript_position, df) {
+    result <- tryCatch(
+        {
+            # Check if we have both treatment groups
+            if (length(unique(df$group_name)) < 2) {
+                stop("Only one level in group_name; cannot fit model.")
+            }
+
+            beta_binomial_model(transcript_id, transcript_position, df)
+        },
+        error = function(e) {
+            # Return default result on error
+            data.frame(
+                transcript_id = transcript_id,
+                transcript_position = transcript_position,
+                estimate = NA_real_,
+                std_err = NA_real_,
+                t_value = NA_real_,
+                p_value = NA_real_,
+                model_error = e$message
+            )
+        }
+    )
+
+    return(result)
+}
+
+# ==============================
+# CLI parameter parsing and help
+# ==============================
 
 # Parse command line arguments
 get_args <- function() {
@@ -98,49 +244,6 @@ get_args <- function() {
     cat("  Output file:", args$output, "\n\n")
 
     return(args)
-}
-
-# Function to apply linear model to each site
-apply_model <- function(transcript_id, transcript_position, df) {
-    tryCatch(
-        {
-            # Check if we have both treatment groups
-            if (length(unique(df$trtGrp)) < 2) {
-                stop("Only one level in trtGrp; cannot fit model.")
-            }
-
-            # Fit linear model
-            # TODO: use the correct group first etc
-            model <- lm(logit ~ trtGrp, data = df)
-
-            # Extract coefficients
-            coefs <- summary(model)$coefficients
-
-            result <- data.frame(
-                transcript_id = transcript_id,
-                transcript_position = transcript_position,
-                estimate = coefs[2, "Estimate"],
-                std_err = coefs[2, "Std. Error"],
-                t_value = coefs[2, "t value"],
-                p_value = coefs[2, "Pr(>|t|)"],
-                model_error = NA_character_
-            )
-        },
-        error = function(e) {
-            # Return default result on error
-            result <- data.frame(
-                transcript_id = transcript_id,
-                transcript_position = transcript_position,
-                estimate = NA_real_,
-                std_err = NA_real_,
-                t_value = NA_real_,
-                p_value = NA_real_,
-                model_error = e$message
-            )
-        }
-    )
-
-    return(result)
 }
 
 # ==============================
