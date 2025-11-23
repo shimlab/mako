@@ -13,6 +13,7 @@ include { MODKIT_PILEUP ; MODKIT_EXTRACT } from './modules/caller/modkit'
 include { M6ANET_DETECT } from './modules/caller/m6anet'
 include { PREP_FROM_DORADO ; PREP_FROM_M6ANET ; SITE_SELECTION } from './modules/dataprep'
 include { CALL_MODEL ; MERGE_TSVS } from './modules/differential'
+include { FLAGSTAT ; FASTQC ; NANOPLOT ; NANOCOMP } from './modules/qc'
 
 // SCHEMA VALIDATION
 include { validateParameters ; paramsSummaryLog } from 'plugin/nf-schema'
@@ -72,6 +73,16 @@ docs:   https://github.com/shimlab/xxx
     )
 
     basecalled_ch = called_ch.mix(uncalled_ch)
+
+    basecalled_ch
+        .map { sample_name, _group, bam -> [sample_name, bam] }
+        .set { qc_bam_ch }
+
+    // post-basecalling QC
+    FLAGSTAT(qc_bam_ch)
+    FASTQC(qc_bam_ch)
+    NANOPLOT(qc_bam_ch)
+    NANOCOMP(qc_bam_ch.map { v -> v[1] }.collect())
     
     // Sort and index BAM files
     sorted_bam_ch = SAMTOOLS_SORT_INDEX(basecalled_ch)
