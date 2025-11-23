@@ -166,8 +166,16 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
 # Model application
 # ==============================
 
-# Function to apply linear model to each site
-apply_model <- function(transcript_id, transcript_position, df) {
+# Function to apply statistical model to each site
+apply_model <- function(transcript_id, transcript_position, df, model_type="none") {
+    model_func <- switch(model_type,
+        homo_norm = homo_norm_model,
+        hetero_norm = hetero_norm_model,
+        binomial = binomial_model,
+        beta_binomial = beta_binomial_model,
+        stop("Unknown model type: ", model_type)
+    )
+
     result <- tryCatch(
         {
             # Check if we have both treatment groups
@@ -175,7 +183,9 @@ apply_model <- function(transcript_id, transcript_position, df) {
                 stop("Only one level in group_name; cannot fit model.")
             }
 
-            beta_binomial_model(transcript_id, transcript_position, df)
+            # Select model based on model_type
+
+            model_func(transcript_id, transcript_position, df)
         },
         error = function(e) {
             # Return default result on error
@@ -220,6 +230,10 @@ get_args <- function() {
         make_option(c("--output"),
             type = "character", default = "model_output.tsv",
             help = "Output TSV filename [default=%default]", metavar = "character"
+        ),
+        make_option(c("--model"),
+            type = "character",
+            help = "Statistical model to use: homo_norm, hetero_norm, binomial, or beta_binomial [default=%default]", metavar = "character"
         )
     )
 
@@ -241,6 +255,7 @@ get_args <- function() {
     cat("  Reads Database:", args$reads_database, "\n")
     cat("  Start index:", args$start, "\n")
     cat("  End index:", args$end, "\n")
+    cat("  Model:", args$model, "\n")
     cat("  Output file:", args$output, "\n\n")
 
     return(args)
@@ -281,7 +296,7 @@ for (offset in seq(args$start, args$end - 1, by = INTERVAL)) {
     
     results_df <- batch %>%
       pmap(~ {
-        apply_model(..1, ..2, ..3)
+        apply_model(..1, ..2, ..3, args$model)
       }) %>%
       list_rbind()
     
