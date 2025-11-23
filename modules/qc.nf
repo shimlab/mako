@@ -23,6 +23,10 @@ process FASTQC {
     publishDir "${params.outdir}/basecall/${sample_name}", mode: params.publish_dir_mode
     label 'single_cpu'
 
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/fastqc:0.12.1--hdfd78af_0' :
+        'quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0' }"
+
     input:
     tuple val(sample_name), path(bam)
     
@@ -46,6 +50,10 @@ process NANOPLOT {
     publishDir "${params.outdir}/basecall/${sample_name}", mode: params.publish_dir_mode
     label 'low_cpu'
 
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/nanoplot:1.43.0--pyhdfd78af_1' :
+        'quay.io/biocontainers/nanoplot:1.46.1--pyhdfd78af_0' }"
+
     input:
     tuple val(sample_name), path(bam)
     
@@ -67,6 +75,11 @@ process NANOPLOT {
 process NANOCOMP {
     publishDir "${params.outdir}/basecall", mode: params.publish_dir_mode
     label 'low_cpu'
+
+
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/nanocomp:1.24.2--pyhdfd78af_0' :
+        'quay.io/biocontainers/nanocomp:1.25.4--pyhdfd78af_0' }"
 
     input:
     path "sample?.bam"
