@@ -65,7 +65,7 @@ process SITE_SELECTION {
         --in-db ${database} \\
         --out-db selected_sites.db \\
         --segments segments.csv \\
-        --batch-size 300000 \\
+        --batch-size 150000 \\
         --output-file segments.csv
     """
 
