@@ -13,7 +13,7 @@ process MODKIT_PILEUP {
     script:
     """
     # Create the pileup file (a bedMethyl table of the modification information)
-    modkit pileup sorted.bam pileup.bed \\
+    modkit pileup sorted.bam pileup_${sample_name}.bed \\
         --log-filepath pileup.log \\
         --threads ${task.cpus} \\
         --ref ${ref}
