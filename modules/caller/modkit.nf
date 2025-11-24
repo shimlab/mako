@@ -1,14 +1,14 @@
 process MODKIT_PILEUP {
     tag "${sample_name}"
     label 'high_cpu'
-    publishDir "${params.outdir}/modcall/dorado", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/modcall/dorado/${sample_name}", mode: params.publish_dir_mode
 
     input:
     tuple val(sample_name), val(group), path("sorted.bam"), path("sorted.bam.bai")
     path ref
 
     output:
-    tuple val(sample_name), val(group), path("pileup.bed.gz"), path("pileup.bed.gz.tbi")
+    tuple val(sample_name), val(group), path("pileup_${sample_name}.bed.gz"), path("pileup_${sample_name}.bed.gz.tbi")
 
     script:
     """
@@ -19,31 +19,31 @@ process MODKIT_PILEUP {
         --ref ${ref}
     
     # Compress and index the pileup file
-    bgzip pileup.bed -@ ${task.cpus}
+    bgzip pileup_${sample_name}.bed -@ ${task.cpus}
 
-    tabix -p bed pileup.bed.gz
+    tabix -p bed pileup_${sample_name}.bed.gz
     # TODO: update htslib to 1.12
     # tabix -p bed -@ ${task.cpus} pileup.bed.gz
     """
 
     stub:
     """
-    touch pileup.bed.gz
-    touch pileup.bed.gz.tbi
+    touch pileup_${sample_name}.bed.gz
+    touch pileup_${sample_name}.bed.gz.tbi
     """
 }
 
 process MODKIT_EXTRACT {
     tag "${sample_name}"
     label 'high_cpu'
-    publishDir "${params.outdir}/modcall/dorado", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/modcall/dorado/${sample_name}", mode: params.publish_dir_mode
 
     input:
     tuple val(sample_name), val(group), path("sorted.bam"), path("sorted.bam.bai")
     path ref
 
     output:
-    tuple val(sample_name), val(group), path("reads_${sample_name}.tsv")
+    tuple val(sample_name), val(group), path("modifications_${sample_name}.tsv")
 
     script:
     """
@@ -56,7 +56,7 @@ process MODKIT_EXTRACT {
 
     # Sort reads.tsv by column 4 (chrom), then column 3 (ref_position)
     (head -n 1 reads_unsorted.tsv && \
-     tail -n +2 reads_unsorted.tsv | sort -k4,4 -k3,3n --parallel ${task.cpus}) > reads_${sample_name}.tsv
+     tail -n +2 reads_unsorted.tsv | sort -k4,4 -k3,3n --parallel ${task.cpus}) > modifications_${sample_name}.tsv
 
     # delete unsorted file to save space
     rm reads_unsorted.tsv
@@ -64,6 +64,6 @@ process MODKIT_EXTRACT {
 
     stub:
     """
-    touch reads_${sample_name}.tsv
+    touch modifications_${sample_name}.tsv
     """
 }

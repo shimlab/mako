@@ -93,6 +93,7 @@ docs:   https://shimlab.github.io/mako
     NANOPLOT(sorted_bam_ch.map { v -> [v[0], v[2], v[3]] } )
     NANOCOMP(sorted_bam_ch.map { v -> v[2] }.collect(sort: true), sorted_bam_ch.map { v -> v[3] }.collect(sort: true))
 
+    MODKIT_PILEUP(sorted_bam_ch, file(params.transcriptome))
     modkit_extract_ch = MODKIT_EXTRACT(sorted_bam_ch, file(params.transcriptome))
 
     aggregated_results = modkit_extract_ch
