@@ -1,0 +1,51 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    paths:
+      - '**/Dockerfile'
+  workflow_dispatch:
+    inputs:
+      dockerfile_path:
+        description: 'Path to Dockerfile (e.g., ./app/Dockerfile)'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Get changed Dockerfiles
+        id: changed-files
+        if: github.event_name == 'push'
+        uses: tj-actions/changed-files@v41
+        with:
+          files: '**/Dockerfile'
+      
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GH_ACTIONS_PKG_OLLIE }}
+      
+      - name: Build and push images
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            files="${{ inputs.dockerfile_path }}"
+          else
+            files="${{ steps.changed-files.outputs.all_changed_files }}"
+          fi
+          
+          for file in $files; do
+            dir=$(dirname $file)
+            name=$(basename $dir)
+            docker build -t ghcr.io/olliecheng/mako_$name_docker:latest $dir
+            docker push ghcr.io/olliecheng/mako_$name_docker:latest
+          done

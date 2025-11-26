@@ -1,5 +1,7 @@
 FROM ubuntu:24.04
 
+LABEL org.opencontainers.image.source=https://github.com/shimlab/mako
+
 ENV LANG=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive \
     TZ=Etc/UTC
