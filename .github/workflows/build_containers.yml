@@ -19,6 +19,7 @@ jobs:
       packages: write
     outputs:
       containers: ${{ steps.build-info.outputs.containers }}
+      sha: ${{ steps.build-info.outputs.sha }}
 
     steps:
       - uses: actions/checkout@v4
@@ -40,6 +41,9 @@ jobs:
       - name: Build and push images
         id: build-info
         run: |
+          # Get short commit SHA
+          sha=$(git rev-parse --short HEAD)
+
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             files="${{ inputs.dockerfile_path }}"
           else
@@ -50,53 +54,12 @@ jobs:
           for file in $files; do
             dir=$(dirname $file)
             name=$(basename $dir)
-            docker build -t ghcr.io/olliecheng/mako_${name}_docker:latest $dir
-            docker push ghcr.io/olliecheng/mako_${name}_docker:latest
+            docker build -t ghcr.io/olliecheng/mako_${name}_docker:${sha} $dir
+            docker push ghcr.io/olliecheng/mako_${name}_docker:${sha}
             built_containers="${built_containers} $name"
           done
 
           built_containers=$(echo $built_containers | xargs)
           echo "containers=${built_containers}" >> $GITHUB_OUTPUT
-          echo "Built containers: ${built_containers}"
-
-  convert-to-singularity:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    container:
-      image: quay.io/singularity/singularity:v3.8.1
-      options: --privileged
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build Singularity containers
-        run: |
-          set -e
-          for name in ${{ needs.build.outputs.containers }}; do
-            echo "Building Singularity container for $name..."
-            singularity build mako_${name}.sif docker://ghcr.io/olliecheng/mako_${name}_docker:latest
-            echo "Successfully built mako_${name}.sif"
-          done
-
-      - name: Log in to GitHub Container Registry
-        run: |
-          echo "${{ secrets.GH_ACTIONS_PKG_OLLIE }}" | \
-            singularity remote login -u ${{ github.actor }} --password-stdin oras://ghcr.io
-
-      - name: Push Singularity containers
-        run: |
-          set -e
-          for name in ${{ needs.build.outputs.containers }}; do
-            echo "Pushing mako_${name}.sif to GHCR..."
-            singularity push mako_${name}.sif oras://ghcr.io/olliecheng/mako_${name}_singularity
-            echo "Successfully pushed mako_${name}.sif"
-          done
-
-      - name: Cleanup
-        if: always()
-        run: |
-          rm -f mako_*.sif
+          echo "sha=${sha}" >> $GITHUB_OUTPUT
+          echo "Built containers: ${built_containers} with tag: ${sha}"
