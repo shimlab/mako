@@ -46,6 +46,6 @@ jobs:
           for file in $files; do
             dir=$(dirname $file)
             name=$(basename $dir)
-            docker build -t ghcr.io/olliecheng/mako_$name_docker:latest $dir
-            docker push ghcr.io/olliecheng/mako_$name_docker:latest
+            docker build -t ghcr.io/olliecheng/mako_${name}_docker:latest $dir
+            docker push ghcr.io/olliecheng/mako_${name}_docker:latest
           done
