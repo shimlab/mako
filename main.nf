@@ -61,6 +61,7 @@ docs:   https://shimlab.github.io/mako
           }
 
     // parse differential model
+    mod_caller_ch = channel.from(params.mod_caller.tokenize(",")).map { it -> it.trim() }
     differential_models_ch = channel.from(params.differential_model.tokenize(",")).map { it -> it.trim() }
 
     // TODO: add m6anet support
