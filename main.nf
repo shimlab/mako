@@ -13,6 +13,7 @@ include { MODKIT_PILEUP ; MODKIT_EXTRACT } from './modules/caller/modkit'
 include { PREP_FROM_DORADO ; PREP_FROM_M6ANET ; SITE_SELECTION } from './modules/dataprep'
 include { CALL_MODEL ; MERGE_TSVS } from './modules/differential'
 include { FLAGSTAT ; FASTQC ; NANOPLOT ; NANOCOMP } from './modules/qc'
+include { RETRIEVE_FILE; REMOVE_FILE } from './modules/caller/fs'
 
 // SCHEMA VALIDATION
 include { validateParameters ; paramsSummaryLog ; paramsHelp } from 'plugin/nf-schema'
@@ -41,6 +42,7 @@ docs:   https://shimlab.github.io/mako
     """)
 
     log.info(paramsSummaryLog(workflow))
+    no_file = file("assets/NO_FILE")
 
     // Read samples file
     samples_ch = Channel.fromPath(params.samplesheet)
@@ -48,7 +50,7 @@ docs:   https://shimlab.github.io/mako
 
     // Check that there are only TWO groups
     samples_ch
-        .map { it.group }
+        .map { it -> it.group }
         .unique()
         .collect()
         .subscribe { groups ->
@@ -65,6 +67,21 @@ docs:   https://shimlab.github.io/mako
 
     // TODO: add m6anet support
     
+    // samples_ch.subscribe {
+    //     sample ->
+    //         log.info("Sample: ${sample.sample}, Group: ${sample.group}, Pod5: ${sample.path_pod5}, Dorado: ${sample.path_dorado ?: 'N/A'}")
+
+    //         if !sample.path_dorado {
+                
+    //         }
+    //         if (it.path_pod5.startsWith("s3"))) {
+    //             outfile_ch = RETRIEVE_FILE([it.sample, it.group, it.path_pod5], params.large_temp_dir)
+
+    //         }
+
+
+    // }
+    
     samples_split_ch = samples_ch.branch { row ->
         called: row.path_dorado
         uncalled: !row.path_dorado
@@ -73,8 +90,14 @@ docs:   https://shimlab.github.io/mako
     called_ch = samples_split_ch.called
         .map { [it.name, it.group, file(it.path_dorado)] }
 
+    pod5_ch = RETRIEVE_FILE(
+        samples_split_ch.uncalled.map { [it.name, it.group, it.path_pod5] },
+        params.large_temp_dir
+    ).map { it -> [it[0], it[1], no_file, it[2]]}view()
+
     uncalled_ch = DORADO_BASECALL_ALIGN(
-        samples_split_ch.uncalled.map { [it.name, it.group, file(it.path_pod5)] },
+        // samples_split_ch.uncalled.map { [it.name, it.group, file(it.path_pod5)] },
+        pod5_ch,
         file(params.transcriptome)
     )
 

@@ -6,16 +6,18 @@ process DORADO_BASECALL_ALIGN {
     container "nanoporetech/dorado:shae9327ad17e023b76e4d27cf287b6b9d3a271092b"
 
     input:
-    tuple val(sample_name), val(group), path(path_pod5)
+    tuple val(sample_name), val(group), path(path_pod5), val(path_temp_pod5)
     path ref
 
     output:
     tuple val(sample_name), val(group), path('basecalled.bam')
 
     script:
+    def pod5_file = path_pod5.name != 'NO_FILE' ? path_pod5 : path_temp_pod5
+
     """
     # Combined basecalling, alignment to reference transcriptome and modification detection with dorado
-    dorado basecaller hac,m6A_DRACH ${path_pod5} \\
+    dorado basecaller hac,m6A_DRACH ${pod5_file} \\
         --reference ${ref} \\
         --mm2-opts "-x map-ont" \\
         --modified-bases-threshold 0 > basecalled.bam
@@ -23,6 +25,7 @@ process DORADO_BASECALL_ALIGN {
 
     stub:
     """
+    sleep 5
     touch basecalled.bam
     """
 }
