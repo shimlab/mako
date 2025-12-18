@@ -10,7 +10,7 @@
       "type": "object",
       "fa_icon": "fas fa-terminal",
       "description": "Define where the pipeline should find input data and save output data.",
-      "required": ["dataset_name", "samplesheet", "outdir"],
+      "required": ["dataset_name", "samplesheet", "outdir", "large_temp_dir"],
       "properties": {
         "dataset_name": {
           "type": "string",
@@ -26,6 +26,11 @@
           "format": "directory-path",
           "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
           "fa_icon": "fas fa-folder-open"
+        },
+        "large_temp_dir": {
+          "type": "string",
+          "fa_icon": "fas fa-folder-open",
+          "description": "This script can download and create large files. Specify a scratch directory with at least ~3TB free space."
         },
         "publish_dir_mode": {
           "type": "string",

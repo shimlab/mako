@@ -10,7 +10,6 @@ nextflow.enable.dsl = 2
 // IMPORTS
 include { DORADO_BASECALL_ALIGN ; SAMTOOLS_SORT_INDEX ; SAMTOOLS_FLAGSTAT } from './modules/caller/dorado'
 include { MODKIT_PILEUP ; MODKIT_EXTRACT } from './modules/caller/modkit'
-include { M6ANET_DETECT } from './modules/caller/m6anet'
 include { PREP_FROM_DORADO ; PREP_FROM_M6ANET ; SITE_SELECTION } from './modules/dataprep'
 include { CALL_MODEL ; MERGE_TSVS } from './modules/differential'
 include { FLAGSTAT ; FASTQC ; NANOPLOT ; NANOCOMP } from './modules/qc'
