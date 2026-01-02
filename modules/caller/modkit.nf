@@ -57,7 +57,7 @@ process MODKIT_EXTRACT {
     # Sort reads.tsv by column 4 (chrom), then column 3 (ref_position)
     (head -n 1 reads_unsorted.tsv && \
      tail -n +2 reads_unsorted.tsv | sort -k4,4 -k3,3n --parallel ${task.cpus}) > modifications_${sample_name}.tsv
-s for 
+
     # delete unsorted file to save space
     rm reads_unsorted.tsv
     """
