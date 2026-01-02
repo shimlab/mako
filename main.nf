@@ -11,7 +11,7 @@ nextflow.enable.dsl = 2
 include { SAMTOOLS_SORT_INDEX ; SAMTOOLS_FLAGSTAT } from './modules/caller/dorado'
 include { MODKIT_PILEUP ; MODKIT_EXTRACT } from './modules/caller/modkit'
 include { PREP_FROM_DORADO ; PREP_FROM_M6ANET ; SITE_SELECTION } from './modules/dataprep'
-include { CALL_MODEL ; MERGE_TSVS } from './modules/differential'
+include { CALL_MODEL ; MERGE_SEGMENTS } from './modules/differential'
 include { FLAGSTAT ; FASTQC ; NANOPLOT ; NANOCOMP } from './modules/qc'
 include { RETRIEVE_FILE; REMOVE_FILE } from './modules/caller/fs'
 
@@ -42,10 +42,9 @@ docs:   https://shimlab.github.io/mako
     """)
 
     log.info(paramsSummaryLog(workflow))
-    no_file = file("assets/NO_FILE")
 
     // Read samples file
-    samples_ch = Channel.fromPath(params.samplesheet)
+    samples_ch = channel.fromPath(params.samplesheet)
         .splitCsv(header: true, sep: ',')
 
     // Check that there are only TWO groups
@@ -85,10 +84,10 @@ docs:   https://shimlab.github.io/mako
 
     aggregated_results = modkit_extract_ch
         .collectFile(keepHeader: true, skip: 1) {
-            ["dorado_extracted_sites.csv","sample_name,group,file_path\n${it[0]},${it[1]},${it[2]}\n"]
+            it -> ["dorado_extracted_sites.csv","sample_name,group,file_path\n${it[0]},${it[1]},${it[2]}\n"]
         }
     
-    reads_database_ch = PREP_FROM_DORADO(aggregated_results.map { ["dorado", it] })
+    reads_database_ch = PREP_FROM_DORADO(aggregated_results.map { it -> ["dorado", it] })
         .first() // convert to value channel
 
     segments_ch = SITE_SELECTION(reads_database_ch)
@@ -97,11 +96,14 @@ docs:   https://shimlab.github.io/mako
             seg.collect { row -> [mod_caller, sites_db, reads_db, row.start, row.end] }
         }
 
-    // CALL_MODEL produces [A, B, C], groupTuple expects [[A, B], [C]] so we map and unmap accordingly
+    // CALL_MODEL produces [diff_caller, mod_caller, segment];
+    //   groupTuple expects [[diff_caller, mod_caller], [segment]]
+    //   to produce [[diff_caller, mod_caller], [segment1, segment2, ...]]
+    //   so we map and unmap accordingly
     diff_ch = CALL_MODEL(differential_models_ch.combine(segments_ch))
         .map { it -> [[it[0], it[1]], it[2]] }
         .groupTuple()
         .map { it -> [it[0][0], it[0][1], it[1]] }
 
-    MERGE_TSVS(diff_ch)
+    MERGE_SEGMENTS(diff_ch)
 }

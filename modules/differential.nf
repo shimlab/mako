@@ -6,7 +6,7 @@ process CALL_MODEL {
     tuple val(differential_model), val(mod_caller), path(sites_db), path(reads_db), val(start), val(end)
 
     output:
-    tuple val(differential_model), val(mod_caller), path("segments/${differential_model}_${start}_to_${end}.tsv")
+    tuple val(differential_model), val(mod_caller), path("segments/${differential_model}_${start}_to_${end}.parquet")
 
     script:
     """
@@ -17,28 +17,34 @@ process CALL_MODEL {
         --reads-database ${reads_db} \\
         --end ${end} \\
         --model ${differential_model} \\
-        --output segments/${differential_model}_${start}_to_${end}.tsv \\
+        --output segments/${differential_model}_${start}_to_${end}.parquet \\
     """
 
     stub:
     """
     mkdir segments
-    echo "${start} to ${end}" > segments/${differential_model}_${start}_to_${end}.tsv
+    echo "${start} to ${end}" > segments/${differential_model}_${start}_to_${end}.parquet
     """
 }
 
-process MERGE_TSVS {
+process MERGE_SEGMENTS {
     label 'local'
     publishDir "${params.outdir}/differential/${mod_caller}", mode: params.publish_dir_mode
 
     input:
-    tuple val(differential_model), val(mod_caller), path("segment*.tsv")
+    tuple val(differential_model), val(mod_caller), path("segment*.parquet")
 
     output:
-    tuple val(differential_model), val(mod_caller), path("differential_sites_${differential_model}.tsv")
+    tuple val(differential_model), val(mod_caller), path("differential_sites_${differential_model}.duckdb")
 
     script:
     """
-    awk 'FNR==1 && NR!=1{next} {print}' segment*.tsv > differential_sites_${differential_model}.tsv
+    duckdb differential_sites_${differential_model}.duckdb \
+        "CREATE TABLE sites AS SELECT * FROM 'segment*.parquet' ORDER BY transcript_id, transcript_position"
+    """
+
+    stub:
+    """
+    echo "test" > differential_sites_${differential_model}.duckdb
     """
 }
