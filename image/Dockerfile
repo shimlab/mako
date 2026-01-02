@@ -37,7 +37,7 @@ RUN apt-get update \
 # This line should be uncommented if using a base image that does not include these utilities.
 # RUN apt-get install -y ...
 
-COPY requirements.txt .
+COPY python_requirements.txt .
 RUN pip install --break-system-packages -r python_requirements.txt
 
 # install Modkit v0.5.0
