@@ -1,5 +1,3 @@
-# Linear Model MVP - Simplified version of run_models_original.R
-# Runs only the linear model: lm(logit ~ trtGrp, data = subset_data)
 
 suppressPackageStartupMessages({
     library(tidyverse)
@@ -7,6 +5,8 @@ suppressPackageStartupMessages({
     library(optparse)
     library(nlme)
     library(aod)
+    library(glm)
+    library(nanoparquet)
 })
 
 
@@ -15,24 +15,21 @@ suppressPackageStartupMessages({
 # ==============================
 
 # homoscedastic Gaussian model
-homo_norm_model <- function(transcript_id, transcript_position, df) {
+homo_norm_model <- function(df) {
     model <- lm(logit ~ group_name, data = df)
     coefs <- summary(model)$coefficients
 
     result <- data.frame(
-        transcript_id = transcript_id,
-        transcript_position = transcript_position,
         estimate = coefs[2, "Estimate"],
         std_err = coefs[2, "Std. Error"],
         t_value = coefs[2, "t value"],
-        p_value = coefs[2, "Pr(>|t|)"],
-        model_error = NA_character_
+        p_value = coefs[2, "Pr(>|t|)"]
     )
     
     return(result)
 }
 
-hetero_norm_model <- function(transcript_id, transcript_position, df) {
+hetero_norm_model <- function(df) {
     model <- gls(
         logit ~ group_name,
         data = df,
@@ -42,27 +39,17 @@ hetero_norm_model <- function(transcript_id, transcript_position, df) {
     coefs <- summary(model)$tTable
 
     result <- data.frame(
-        transcript_id = transcript_id,
-        transcript_position = transcript_position,
         estimate = coefs[2, "Value"],
         std_err = coefs[2, "Std.Error"],
         t_value = coefs[2, "t-value"],
-        p_value = coefs[2, "p-value"],
-        model_error = NA_character_
+        p_value = coefs[2, "p-value"]
     )
     
     return(result)
 }
 
-binomial_model <- function(transcript_id, transcript_position, df) {
-    agg_df <- df %>%
-        group_by(sample_name, group_name) %>%
-        summarise(
-            successes = sum(probability_modified >= 0.5),
-            failures = sum(probability_modified < 0.5),
-            .groups = "keep"
-        ) %>%
-        ungroup()
+binomial_model <- function(df) {
+    agg_df <- binarize(df)
 
     model <- glm(cbind(successes, failures) ~ group_name,
         data = agg_df,
@@ -72,27 +59,17 @@ binomial_model <- function(transcript_id, transcript_position, df) {
     coefs <- summary(model)$coefficients
 
     result <- data.frame(
-        transcript_id = transcript_id,
-        transcript_position = transcript_position,
         estimate = coefs[2, "Estimate"],
         std_err = coefs[2, "Std. Error"],
         t_value = coefs[2, "z value"],
-        p_value = coefs[2, "Pr(>|z|)"],
-        model_error = NA_character_
+        p_value = coefs[2, "Pr(>|z|)"]
     )
     
     return(result)
 }
 
-beta_binomial_model <- function(transcript_id, transcript_position, df) {
-    agg_df <- df %>%
-        group_by(sample_name, group_name) %>%
-        summarise(
-            successes = sum(probability_modified >= 0.5),
-            failures = sum(probability_modified < 0.5),
-            .groups = "keep"
-        ) %>%
-        ungroup()
+beta_binomial_model <- function(df) {
+    agg_df <- binarize(df)
 
     model <- betabin(cbind(successes, failures) ~ group_name, ~1,
         data = agg_df
@@ -101,26 +78,55 @@ beta_binomial_model <- function(transcript_id, transcript_position, df) {
     coefs <- summary(model)$coefficients
 
     result <- data.frame(
-        transcript_id = transcript_id,
-        transcript_position = transcript_position,
         estimate = coefs[2, "Estimate"],
         std_err = coefs[2, "Std. Error"],
         t_value = coefs[2, "z value"],
-        p_value = coefs[2, "Pr(> |z|)"],
-        model_error = NA_character_
+        p_value = coefs[2, "Pr(> |z|)"]
     )
     
     return(result)
 }
 
+
 # ==============================
-# Data loading and transformation
+# Utility functions
 # ==============================
+
+get_dispersion <- function(df) {
+    agg_df <- binarize(df)
+    
+    # Fit quasi-binomial model
+    fit <- glm(cbind(successes, failures) ~ group_name,
+            data = agg_df,
+            family = quasibinomial(link = "logit"))
+
+    # Extract dispersion parameter
+    dispersion <- summary(fit)$dispersion
+
+    return(dispersion)
+}
 
 logit <- function(p) {
     eps <- 1e-10
     log((p + eps) / (1 - p + eps))
 }
+
+binarize <- function(df, threshold=0.5) {
+    binarized_df <- df %>%
+        group_by(sample_name, group_name) %>%
+        summarise(
+            successes = sum(probability_modified >= threshold),
+            failures = sum(probability_modified < threshold),
+            .groups = "keep"
+        ) %>%
+        ungroup()
+    
+    return(binarized_df)
+}
+
+# ==============================
+# Data loading
+# ==============================
 
 fetch_dataframe <- function(start, end, sites_db, reads_db) {
     con <- dbConnect(duckdb(), dbdir = sites_db, read_only = TRUE)
@@ -129,16 +135,16 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
     df <- dbGetQuery(
         con,
         "
-    SELECT *
-      FROM all_sites.reads
-      SEMI JOIN (
-          SELECT * FROM selected_sites
-          ORDER BY transcript_id, transcript_position
-          OFFSET ?
-          LIMIT ?
-      )
-      USING (transcript_id, transcript_position)
-    ",
+        SELECT *
+        FROM all_sites.reads
+        SEMI JOIN (
+            SELECT * FROM selected_sites
+            ORDER BY transcript_id, transcript_position
+            OFFSET ?
+            LIMIT ?
+        )
+        USING (transcript_id, transcript_position)
+        ",
         list(start, end - start + 1)
     )
     
@@ -162,12 +168,51 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
     return(df_nested)
 }
 
+
+
 # ==============================
 # Model application
 # ==============================
 
+process_modification_site <- function(transcript_id, transcript_position, df, model_type="none") {
+    if (model_type == "automatic") {
+        dispersion <- get_dispersion(df)
+        if (dispersion <= 1.0) {
+            # run binomial model
+            output_df <- run_model(df, "binomial")
+        } else if (dispersion < 1.5) {
+            # run beta-binomial with binomial fallback
+            output_df <- run_model(df, "beta_binomial")
+            if (output_df$error) {
+                output_df <- run_model(df, "binomial")
+            }
+        } else if (dispersion >= 1.5) {
+            # run beta-binomial model
+            output_df <- run_model(df, "beta_binomial")
+        } else {
+            # could not determine model - produce error
+            output_df <- data.frame(
+                estimate = NA_real_,
+                std_err = NA_real_,
+                t_value = NA_real_,
+                p_value = NA_real_,
+                model_type = "none",
+                error = TRUE,
+                error_message = sprintf("Could not determine model for dispersion: %f", dispersion)
+            )
+        }
+    } else {
+        output_df <- run_model(df, model_type)
+    }
+
+    output_df$transcript_id <- transcript_id
+    output_df$transcript_position <- transcript_position
+
+    return(output_df)
+}
+
 # Function to apply statistical model to each site
-apply_model <- function(transcript_id, transcript_position, df, model_type="none") {
+run_model <- function(df, model_type="none") {
     model_func <- switch(model_type,
         homo_norm = homo_norm_model,
         hetero_norm = hetero_norm_model,
@@ -185,18 +230,28 @@ apply_model <- function(transcript_id, transcript_position, df, model_type="none
 
             # Select model based on model_type
 
-            model_func(transcript_id, transcript_position, df)
+            result_df <- model_func(df)
+
+            if (sum(is.na(result_df))) {
+                stop("Model returned NA values")
+            }
+
+            result_df$model_type <- model_type
+            result_df$error <- FALSE
+            result_df$error_message <- NA_character_
+
+            return(result_df)
         },
         error = function(e) {
             # Return default result on error
             data.frame(
-                transcript_id = transcript_id,
-                transcript_position = transcript_position,
                 estimate = NA_real_,
                 std_err = NA_real_,
                 t_value = NA_real_,
                 p_value = NA_real_,
-                model_error = e$message
+                model_type = model_type,
+                error = TRUE,
+                error_message = e$message
             )
         }
     )
@@ -271,21 +326,23 @@ args <- get_args()
 # preallocate
 n_rows <- args$end - args$start + 1
 output_df <- data.frame(
-  transcript_id = integer(n_rows),
-  transcript_position = integer(n_rows),
-  estimate = numeric(n_rows),
-  std_err = numeric(n_rows),
-  t_value = numeric(n_rows),
-  p_value = numeric(n_rows),
-  model_error = character(n_rows)
+    transcript_id = integer(n_rows),
+    transcript_position = integer(n_rows),
+    estimate = numeric(n_rows),
+    std_err = numeric(n_rows),
+    t_value = numeric(n_rows),
+    p_value = numeric(n_rows),
+    model_type = character(n_rows),
+    error = logical(n_rows),
+    error_message = character(n_rows)
 )
 
-first_iter = TRUE
 
 start_time <- Sys.time()
 
 INTERVAL <- 5000
 output_list <- list()
+
 for (offset in seq(args$start, args$end - 1, by = INTERVAL)) {
     start <- offset
     end <- min(offset + INTERVAL - 1, args$end)
@@ -294,26 +351,15 @@ for (offset in seq(args$start, args$end - 1, by = INTERVAL)) {
 
     batch <- fetch_dataframe(start, end, args$sites_database, args$reads_database)
     
-    results_df <- batch %>%
+    output_df[start:end, ] <- batch %>%
       pmap(~ {
-        apply_model(..1, ..2, ..3, args$model)
+        run_model(..1, ..2, ..3, args$model)
       }) %>%
       list_rbind()
-    
-    write.table(
-      results_df,
-      args$output,
-      quote=FALSE,
-      sep="\t",
-      row.names=FALSE,
-      col.names=first_iter,
-      append=!first_iter
-    )
-    
-    first_iter <- FALSE
-
-    cat("\n")
 }
+
+# write to Parquet
+write_parquet(output_df, args$output)
 
 end_time <- Sys.time()
 time_taken <- end_time - start_time

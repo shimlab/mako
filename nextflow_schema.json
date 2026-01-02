@@ -49,8 +49,15 @@
         },
         "differential_model": {
           "type": "string",
-          "default": "homo_norm",
-          "description": "The model to use to call differentially modified sites, as a comma-separated list. Options: homo_norm, hetero_norm, binomial, beta_binomial"
+          "default": "adaptive_binomial",
+          "description": "The model to use to call differentially modified sites, as a comma-separated list. Options: adaptive_binomial, homo_norm, hetero_norm, binomial, beta_binomial",
+          "enum": [
+            "adaptive_binomial",
+            "homo_norm",
+            "hetero_norm",
+            "binomial",
+            "beta_binomial"
+          ]
         },
         "transcriptome": {
           "type": "string",

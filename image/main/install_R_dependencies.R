@@ -25,5 +25,6 @@ install.packages(c(
     "geepack",
     "DescTools",
     "goftest",
-    "twosamples"
+    "twosamples",
+    "nanoparquet"
 ))
