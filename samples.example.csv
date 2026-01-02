@@ -1,7 +1,7 @@
-name,group,path_dorado,path_m6anet,path_pod5
-mar_1_cn,cn,,,/path_to_data/mar_1_cn
-mar_1_cb,cb,,,/path_to_data/mar_1_cb
-mar_2_cn,cn,,,/path_to_data/mar_2_cn
-mar_2_cb,cb,,,/path_to_data/mar_2_cb
-mar_3_cn,cn,,,/path_to_data/mar_3_cn
-mar_3_cb,cb,,,/path_to_data/mar_3_cb
+name,group,path_dorado,path_m6anet
+mar_1_cn,cn,/path_to_data/mar_1_cn,,
+mar_1_cb,cb,/path_to_data/mar_1_cb,,
+mar_2_cn,cn,/path_to_data/mar_2_cn,,
+mar_2_cb,cb,/path_to_data/mar_2_cb,,
+mar_3_cn,cn,/path_to_data/mar_3_cn,,
+mar_3_cb,cb,/path_to_data/mar_3_cb,,
