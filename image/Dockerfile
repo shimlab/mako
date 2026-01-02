@@ -38,7 +38,7 @@ RUN apt-get update \
 # RUN apt-get install -y ...
 
 COPY requirements.txt .
-RUN pip install --break-system-packages -r requirements.txt
+RUN pip install --break-system-packages -r python_requirements.txt
 
 # install Modkit v0.5.0
 RUN wget "https://github.com/nanoporetech/modkit/releases/download/v0.5.0/modkit_v0.5.0_u16_x86_64.tar.gz" -O modkit.tar.gz \

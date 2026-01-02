@@ -2,14 +2,11 @@ name: Build Docker container
 
 on:
   push:
+    branches:
+      - main
     paths:
-      - '**/Dockerfile'
+      - 'image/**'
   workflow_dispatch:
-    inputs:
-      dockerfile_path:
-        description: 'Path to Dockerfile (e.g., ./app/Dockerfile)'
-        required: true
-        type: string
 
 jobs:
   build:
@@ -24,13 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Get changed Dockerfiles
-        id: changed-files
-        if: github.event_name == 'push'
-        uses: tj-actions/changed-files@v41
-        with:
-          files: '**/Dockerfile'
-      
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -44,22 +34,42 @@ jobs:
           # Get short commit SHA
           sha=$(git rev-parse --short HEAD)
 
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            files="${{ inputs.dockerfile_path }}"
-          else
-            files="${{ steps.changed-files.outputs.all_changed_files }}"
-          fi
+          docker build -t ghcr.io/olliecheng/mako_main_docker:${sha} ./image
+          docker push ghcr.io/olliecheng/mako_main_docker:${sha}
 
-          built_containers=""
-          for file in $files; do
-            dir=$(dirname $file)
-            name=$(basename $dir)
-            docker build -t ghcr.io/olliecheng/mako_${name}_docker:${sha} $dir
-            docker push ghcr.io/olliecheng/mako_${name}_docker:${sha}
-            built_containers="${built_containers} $name"
-          done
-
-          built_containers=$(echo $built_containers | xargs)
-          echo "containers=${built_containers}" >> $GITHUB_OUTPUT
           echo "sha=${sha}" >> $GITHUB_OUTPUT
-          echo "Built containers: ${built_containers} with tag: ${sha}"
+          echo "Built container with tag: ${sha}"
+
+  convert-to-singularity:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    container:
+      image: quay.io/singularity/singularity:v3.8.1
+      options: --privileged
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Singularity containers
+        run: |
+          set -e
+          singularity build mako_main.sif docker://ghcr.io/olliecheng/mako_main_docker:${{ needs.build.outputs.sha }}
+
+      - name: Log in to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GH_ACTIONS_PKG_OLLIE }}" | \
+            singularity remote login -u ${{ github.actor }} --password-stdin oras://ghcr.io
+
+      - name: Push Singularity containers
+        run: |
+          set -e
+          singularity push mako_main.sif oras://ghcr.io/olliecheng/mako_main_singularity:${{ needs.build.outputs.sha }}
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f mako_*.sif
