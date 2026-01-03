@@ -5,7 +5,6 @@ suppressPackageStartupMessages({
     library(optparse)
     library(nlme)
     library(aod)
-    library(glm)
     library(nanoparquet)
 })
 
