@@ -37,6 +37,7 @@ RUN apt-get update \
 # This line should be uncommented if using a base image that does not include these utilities.
 # RUN apt-get install -y ...
 
+
 COPY python_requirements.txt .
 RUN pip install --break-system-packages -r python_requirements.txt
 
@@ -53,3 +54,7 @@ RUN Rscript install_R_dependencies.R
 
 # move files to PATH
 RUN ln -s $(realpath modkit/modkit) /usr/local/bin/modkit
+
+# install duckdb
+RUN curl https://install.duckdb.org | sh && \
+    cp ~/.duckdb/cli/latest/duckdb /usr/local/bin/
