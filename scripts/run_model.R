@@ -131,6 +131,19 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
     con <- dbConnect(duckdb(), dbdir = sites_db, read_only = TRUE)
     dbExecute(con, sprintf("ATTACH '%s' AS all_sites (READONLY);", reads_db))
 
+    # get list of sites
+    sites <- dbGetQuery(
+        con,
+        "
+        SELECT transcript_id, transcript_position FROM selected_sites
+        ORDER BY transcript_id, transcript_position
+        OFFSET ?
+        LIMIT ?
+        ",
+        list(start, end - start + 1)
+    )
+
+    # get corresponding reads
     df <- dbGetQuery(
         con,
         "
@@ -147,24 +160,38 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
         list(start, end - start + 1)
     )
     
+    cat("  ", nrow(df), "rows\n")
 
-    cat("  ", nrow(df), "rows")
-    
-    df_nested <- df %>%
+    dbDisconnect(con)
+
+    reads <- df %>%
       mutate(
         transcript_id,
         transcript_position,
         sample_name,
         probability_modified,
+        ignored,
         group_name = factor(group_name),
         logit = logit(probability_modified),
         .keep = "none"
-      ) %>%
-      nest(.by = c(transcript_id, transcript_position))
+      )
+
+    return(list(sites=sites, reads=reads))
     
-    cat("; ", nrow(df_nested), "groups")
-    dbDisconnect(con)
-    return(df_nested)
+    # df_nested <- df %>%
+    #   mutate(
+    #     transcript_id,
+    #     transcript_position,
+    #     sample_name,
+    #     probability_modified,
+    #     group_name = factor(group_name),
+    #     logit = logit(probability_modified),
+    #     .keep = "none"
+    #   ) %>%
+    #   nest(.by = c(transcript_id, transcript_position))
+    
+    # cat("; ", nrow(df_nested), "groups\n")
+    # return(df_nested)
 }
 
 
@@ -174,7 +201,7 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
 # ==============================
 
 process_modification_site <- function(transcript_id, transcript_position, df, model_type="none") {
-    if (model_type == "automatic") {
+    if (model_type == "adaptive_binomial") {
         dispersion <- get_dispersion(df)
         if (dispersion <= 1.0) {
             # run binomial model
@@ -274,11 +301,11 @@ get_args <- function() {
             help = "Path to the reads DuckDB database", metavar = "character"
         ),
         make_option(c("--start"),
-            type = "integer", default = 0,
+            type = "integer",
             help = "Start index for data processing [default=%default]", metavar = "number"
         ),
         make_option(c("--end"),
-            type = "integer", default = 199999,
+            type = "integer",
             help = "End index for data processing [default=%default]", metavar = "number"
         ),
         make_option(c("--output"),
@@ -305,8 +332,7 @@ get_args <- function() {
     }
 
     cat("Parameters:\n")
-    cat("  Sites Database:", args$sites_database, "\n")
-    cat("  Reads Database:", args$reads_database, "\n")
+    cat("  Database:", args$db, "\n")
     cat("  Start index:", args$start, "\n")
     cat("  End index:", args$end, "\n")
     cat("  Model:", args$model, "\n")
@@ -327,11 +353,11 @@ n_rows <- args$end - args$start + 1
 output_df <- data.frame(
     transcript_id = integer(n_rows),
     transcript_position = integer(n_rows),
+    model_type = character(n_rows),
     estimate = numeric(n_rows),
     std_err = numeric(n_rows),
     t_value = numeric(n_rows),
     p_value = numeric(n_rows),
-    model_type = character(n_rows),
     error = logical(n_rows),
     error_message = character(n_rows)
 )
@@ -339,9 +365,9 @@ output_df <- data.frame(
 
 start_time <- Sys.time()
 
-INTERVAL <- 5000
-output_list <- list()
+INTERVAL <- 512
 
+# process in batches, since batched database access is much faster than single-row
 for (offset in seq(args$start, args$end - 1, by = INTERVAL)) {
     start <- offset
     end <- min(offset + INTERVAL - 1, args$end)
@@ -349,12 +375,27 @@ for (offset in seq(args$start, args$end - 1, by = INTERVAL)) {
     cat("Processing rows", start, "to", end, "...\n")
 
     batch <- fetch_dataframe(start, end, args$sites_database, args$reads_database)
-    
-    output_df[start:end, ] <- batch %>%
-      pmap(~ {
-        run_model(..1, ..2, ..3, args$model)
-      }) %>%
-      list_rbind()
+
+    for (i in seq_len(nrow(batch$sites))) {
+        site_tx_id <- batch$sites$transcript_id[i]
+        site_tx_pos <- batch$sites$transcript_position[i]
+
+        site_reads <- batch$reads %>%
+            filter(
+                transcript_id == site_tx_id,
+                transcript_position == site_tx_pos,
+                ignored == FALSE
+            )
+
+        site_df <- process_modification_site(
+            site_tx_id,
+            site_tx_pos,
+            site_reads,
+            args$model
+        )
+
+        output_df[start + i - 1, ] <- site_df[, names(output_df)]
+    }
 }
 
 # write to Parquet

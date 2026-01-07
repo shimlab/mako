@@ -15,6 +15,7 @@ process CALL_MODEL {
     Rscript ${projectDir}/scripts/run_model.R \\
         --sites-database ${sites_db} \\
         --reads-database ${reads_db} \\
+        --start ${start} \\
         --end ${end} \\
         --model ${differential_model} \\
         --output segments/${differential_model}_${start}_to_${end}.parquet \\
@@ -28,8 +29,13 @@ process CALL_MODEL {
 }
 
 process MERGE_SEGMENTS {
-    label 'local'
+    label 'low_cpu'
     publishDir "${params.outdir}/differential/${mod_caller}", mode: params.publish_dir_mode
+
+    // TODO: remove and use standard container once testing is complete
+    container "${ workflow.containerEngine == 'singularity' ?
+    'oras://ghcr.io/olliecheng/mako_main_singularity:be76da4' :
+    'ghcr.io/olliecheng/mako_main_docker:be76da4' }"
 
     input:
     tuple val(differential_model), val(mod_caller), path("segment*.parquet")
@@ -40,7 +46,7 @@ process MERGE_SEGMENTS {
     script:
     """
     duckdb differential_sites_${differential_model}.duckdb \
-        "CREATE TABLE sites AS SELECT * FROM 'segment*.parquet' ORDER BY transcript_id, transcript_position"
+        "SET memory_limit='28GB'; CREATE TABLE sites AS SELECT * FROM 'segment*.parquet' ORDER BY transcript_id, transcript_position"
     """
 
     stub:

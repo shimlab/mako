@@ -41,16 +41,10 @@
       "description": "",
       "default": "",
       "properties": {
-        "mod_caller": {
-          "type": "string",
-          "default": "dorado",
-          "description": "The method used to call the RNA modification. Options: dorado. m6Anet support is coming soon!",
-          "enum": ["dorado", "m6anet"]
-        },
         "differential_model": {
           "type": "string",
           "default": "adaptive_binomial",
-          "description": "The model to use to call differentially modified sites, as a comma-separated list. Options: adaptive_binomial, homo_norm, hetero_norm, binomial, beta_binomial",
+          "description": "Model to use to call differentially modified sites, as a comma-separated list. Options: adaptive_binomial, homo_norm, hetero_norm, binomial, beta_binomial",
           "enum": [
             "adaptive_binomial",
             "homo_norm",
@@ -61,20 +55,37 @@
         },
         "transcriptome": {
           "type": "string",
-          "description": "The reference transcriptome, in .fasta format"
+          "description": "Reference transcriptome, in .fasta format"
+        },
+        "gtf": {
+          "type": "string",
+          "description": "GTF annotation file"
+        }
+      },
+      "required": ["differential_model", "transcriptome", "gtf"]
+    },
+    "modification_calling_parameters": {
+      "title": "Modification calling parameters",
+      "type": "object",
+      "description": "Settings which control which sites are selected for differential calling.",
+      "default": "",
+      "properties": {
+        "max_negative_prob": {
+          "type": "number",
+          "default": 0.2,
+          "description": "Negative modification sites with probability within [x, 0.5] will be ignored"
+        },
+        "min_positive_prob": {
+          "type": "number",
+          "default": 0.8,
+          "description": "Positive modification sites with probability within [0.5, x] will be ignored"
         },
         "min_reads": {
           "type": "integer",
           "default": 20,
-          "description": "Minimum reads needed at a site (across all samples) to be called"
-        },
-        "prob_threshold": {
-          "type": "integer",
-          "default": 0,
-          "description": "Minimum probability detected at a site to be called"
+          "description": "Minimum non-ignored modifications needed at a transcript site (across all samples) to be called"
         }
-      },
-      "required": ["differential_model", "transcriptome"]
+      }
     }
   },
   "allOf": [
@@ -83,6 +94,9 @@
     },
     {
       "$ref": "#/$defs/pipeline_parameters"
+    },
+    {
+      "$ref": "#/$defs/modification_calling_parameters"
     }
   ],
   "properties": {

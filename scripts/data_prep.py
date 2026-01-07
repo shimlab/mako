@@ -15,7 +15,7 @@ Description: Script to load and prepare read-level RNA modification probabilitie
 """
 
 
-def dorado_data_prep(file_info_list, sites_file, threads):
+def dorado_data_prep(file_info_list, sites_file, threads, interval_a, interval_b):
     """
     Load data from TSV files into a DuckDB database using UNION ALL approach.
     Args:
@@ -35,7 +35,7 @@ def dorado_data_prep(file_info_list, sites_file, threads):
     sys.stderr.flush()
 
     conn.execute(
-        "CREATE TABLE reads (sample_name VARCHAR, group_name VARCHAR, transcript_id VARCHAR, transcript_position INTEGER, probability_modified FLOAT)"
+        "CREATE TABLE reads (sample_name VARCHAR, group_name VARCHAR, transcript_id VARCHAR, transcript_position INTEGER, probability_modified FLOAT, ignored BOOLEAN);"
     )
 
     for f in file_info_list:
@@ -53,7 +53,8 @@ def dorado_data_prep(file_info_list, sites_file, threads):
                 '{group_name}' as group_name,
                 chrom as transcript_id,
                 ref_position as transcript_position,
-                mod_qual as probability_modified
+                mod_qual as probability_modified,
+                (mod_qual BETWEEN {interval_a} AND {interval_b}) as ignored
             FROM read_csv('{file_path}', delim='\t')
         """)
 
@@ -74,6 +75,7 @@ def dorado_data_prep(file_info_list, sites_file, threads):
       AVG(probability_modified) as avg_probability_modified,
       var_samp(probability_modified) as variance
     FROM reads
+    WHERE ignored = False
     GROUP BY transcript_id, transcript_position
     """)
 
@@ -118,6 +120,8 @@ if __name__ == "__main__":
         type=int,
         help="Number of threads to use for data preparation (default: 16)",
     )
+    parser.add_argument("--prob-filter-lower-bound", help="Interval A in the filter mod ∉ [a, b]", type=float)
+    parser.add_argument("--prob-filter-upper-bound", help="Interval B in the filter mod ∉ [a, b]", type=float)
     parser.add_argument("--output", help="Output sites.tsv path")
 
     args = parser.parse_args()
@@ -126,7 +130,7 @@ if __name__ == "__main__":
     file_info_list = pd.read_csv(args.input, header=0).to_dict(orient="records")
 
     if args.method == "dorado":
-        dorado_data_prep(file_info_list, args.output, args.threads)
+        dorado_data_prep(file_info_list, args.output, args.threads, args.prob_filter_lower_bound, args.prob_filter_upper_bound)
 
     elif args.method == "m6Anet":
         m6anet_data_prep(file_info_list, args.output)
