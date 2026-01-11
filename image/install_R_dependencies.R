@@ -16,6 +16,8 @@ install.packages(c(
     "tidyverse",
     "duckdb",
     "optparse",
+    "nanoparquet",
+    "GenomicFeatures",
     # statistics libraries
     "nlme",
     "lmerTest",
@@ -25,6 +27,5 @@ install.packages(c(
     "geepack",
     "DescTools",
     "goftest",
-    "twosamples",
-    "nanoparquet"
+    "twosamples"
 ))

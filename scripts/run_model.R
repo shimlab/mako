@@ -74,7 +74,7 @@ beta_binomial_model <- function(df) {
         data = agg_df
     )
 
-    coefs <- summary(model)$coefficients
+    coefs <- summary(model)@Coef
 
     result <- data.frame(
         estimate = coefs[2, "Estimate"],
@@ -277,7 +277,13 @@ run_model <- function(df, model_type="none") {
                 p_value = NA_real_,
                 model_type = model_type,
                 error = TRUE,
-                error_message = e$message
+                error_message = paste(
+                    conditionMessage(e),
+                    "\nCall:",
+                    paste(deparse(conditionCall(e)), collapse = ""),
+                    "\nStack:",
+                    paste(capture.output(sys.calls()), collapse = "\n")
+                )
             )
         }
     )
@@ -353,13 +359,13 @@ n_rows <- args$end - args$start + 1
 output_df <- data.frame(
     transcript_id = integer(n_rows),
     transcript_position = integer(n_rows),
-    model_type = character(n_rows),
+    model_type = rep(NA_character_, n_rows),
     estimate = numeric(n_rows),
     std_err = numeric(n_rows),
     t_value = numeric(n_rows),
     p_value = numeric(n_rows),
     error = logical(n_rows),
-    error_message = character(n_rows)
+    error_message = rep(NA_character_, n_rows)
 )
 
 
@@ -394,7 +400,11 @@ for (offset in seq(args$start, args$end - 1, by = INTERVAL)) {
             args$model
         )
 
-        output_df[start + i - 1, ] <- site_df[, names(output_df)]
+        if (!(is.na(output_df$model_type[offset - args$start + i]))) {
+            stop("Model type not recorded for site ", site_tx_id, ":", site_tx_pos)
+        }
+
+        output_df[offset - args$start + i, ] <- site_df[, names(output_df)]
     }
 }
 
