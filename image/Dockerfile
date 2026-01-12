@@ -27,6 +27,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     # general dependencies
     r-base-core python3 python3-pip samtools tabix \
+    build-essential libcurl4-openssl-dev libxml2-dev \
+    libssl-dev zlib1g-dev libbz2-dev liblzma-dev libpcre2-dev \
     # packages
     # r-cran-tidyverse r-cran-duckdb r-cran-duckplyr r-cran-lme4 r-cran-lmertest r-cran-optparse \
     && rm -rf /var/lib/apt/lists/*

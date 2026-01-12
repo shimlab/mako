@@ -10,6 +10,7 @@ options(
         )
     )
 )
+options(BioC_mirror = "https://packagemanager.posit.co/bioconductor")
 
 install.packages(c(
     "data.table",
@@ -17,7 +18,6 @@ install.packages(c(
     "duckdb",
     "optparse",
     "nanoparquet",
-    "GenomicFeatures",
     # statistics libraries
     "nlme",
     "lmerTest",
@@ -29,3 +29,10 @@ install.packages(c(
     "goftest",
     "twosamples"
 ))
+
+# Bioconductor packages
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("GenomicFeatures")
+BiocManager::install("txdbmaker")

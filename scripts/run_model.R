@@ -6,6 +6,8 @@ suppressPackageStartupMessages({
     library(nlme)
     library(aod)
     library(nanoparquet)
+    library(GenomicFeatures)
+    library(txdbmaker)
 })
 
 
@@ -143,6 +145,8 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
         list(start, end - start + 1)
     )
 
+    sites <- map_to_genome(sites)
+
     # get corresponding reads
     df <- dbGetQuery(
         con,
@@ -195,12 +199,45 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
 }
 
 
+# =============================
+# Transcriptome -> genome mapping
+# =============================
+
+# Build once and store globally
+EXONS_DB <- NULL
+
+init_exons_db <- function(gtf_file) {
+  txdb <- txdbmaker::makeTxDbFromGFF(gtf_file)
+  EXONS_DB <<- exonsBy(txdb, by = "tx", use.names = TRUE)
+}
+
+map_to_genome <- function(df) {
+  if (is.null(EXONS_DB)) {
+    stop("EXONS_DB not initialized. Run init_exons_db() first.")
+  }
+  
+  # Create GRanges from transcript coordinates (convert 0-based to 1-based)
+  tx_coords <- GRanges(
+    seqnames = df$transcript_id,
+    ranges = IRanges(start = df$transcript_position + 1, 
+                     end = df$transcript_position + 1)
+  )
+  
+  # Map to genomic coordinates
+  genomic_coords <- mapFromTranscripts(tx_coords, EXONS_DB)
+  
+  # Extract genomic positions
+  df$genome_id <- as.character(seqnames(genomic_coords))
+  df$genome_position <- start(genomic_coords) - 1  # Convert back to 0-based
+  
+  return(df)
+}
 
 # ==============================
 # Model application
 # ==============================
 
-process_modification_site <- function(transcript_id, transcript_position, df, model_type="none") {
+process_modification_site <- function(df, model_type="none") {
     if (model_type == "adaptive_binomial") {
         dispersion <- get_dispersion(df)
         if (dispersion <= 1.0) {
@@ -230,9 +267,6 @@ process_modification_site <- function(transcript_id, transcript_position, df, mo
     } else {
         output_df <- run_model(df, model_type)
     }
-
-    output_df$transcript_id <- transcript_id
-    output_df$transcript_position <- transcript_position
 
     return(output_df)
 }
@@ -321,6 +355,10 @@ get_args <- function() {
         make_option(c("--model"),
             type = "character",
             help = "Statistical model to use: homo_norm, hetero_norm, binomial, or beta_binomial [default=%default]", metavar = "character"
+        ),
+        make_option(c("--gtf"),
+            type = "character", default = NULL,
+            help = "Path to the GTF file for transcriptome to genome mapping", metavar = "character"
         )
     )
 
@@ -338,11 +376,13 @@ get_args <- function() {
     }
 
     cat("Parameters:\n")
-    cat("  Database:", args$db, "\n")
+    cat("  Sites database:", args$sites_database, "\n")
+    cat("  Reads database:", args$reads_database, "\n")
     cat("  Start index:", args$start, "\n")
     cat("  End index:", args$end, "\n")
     cat("  Model:", args$model, "\n")
     cat("  Output file:", args$output, "\n\n")
+    cat("  GTF file:", args$gtf, "\n\n")
 
     return(args)
 }
@@ -354,11 +394,15 @@ get_args <- function() {
 # Only run main script if this file is executed directly (not sourced)
 args <- get_args()
 
+init_exons_db(args$gtf)
+
 # preallocate
 n_rows <- args$end - args$start + 1
 output_df <- data.frame(
-    transcript_id = integer(n_rows),
+    transcript_id = rep(NA_character_, n_rows),
     transcript_position = integer(n_rows),
+    genome_id = rep(NA_character_, n_rows),
+    genome_position = integer(n_rows),
     model_type = rep(NA_character_, n_rows),
     estimate = numeric(n_rows),
     std_err = numeric(n_rows),
@@ -385,6 +429,8 @@ for (offset in seq(args$start, args$end - 1, by = INTERVAL)) {
     for (i in seq_len(nrow(batch$sites))) {
         site_tx_id <- batch$sites$transcript_id[i]
         site_tx_pos <- batch$sites$transcript_position[i]
+        site_gen_id <- batch$sites$genome_id[i]
+        site_gen_pos <- batch$sites$genome_position[i]
 
         site_reads <- batch$reads %>%
             filter(
@@ -393,12 +439,13 @@ for (offset in seq(args$start, args$end - 1, by = INTERVAL)) {
                 ignored == FALSE
             )
 
-        site_df <- process_modification_site(
-            site_tx_id,
-            site_tx_pos,
-            site_reads,
-            args$model
-        )
+        site_df <- process_modification_site(site_reads, args$model)
+
+        # add metadata to the site
+        site_df$transcript_id <- site_tx_id
+        site_df$transcript_position <- site_tx_pos
+        site_df$genome_id <- site_gen_id
+        site_df$genome_position <- site_gen_pos
 
         if (!(is.na(output_df$model_type[offset - args$start + i]))) {
             stop("Model type not recorded for site ", site_tx_id, ":", site_tx_pos)
