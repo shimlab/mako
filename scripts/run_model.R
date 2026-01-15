@@ -10,6 +10,8 @@ suppressPackageStartupMessages({
     library(txdbmaker)
 })
 
+options(error = traceback)
+
 
 # ==============================
 # Models
@@ -23,7 +25,7 @@ homo_norm_model <- function(df) {
     result <- data.frame(
         estimate = coefs[2, "Estimate"],
         std_err = coefs[2, "Std. Error"],
-        t_value = coefs[2, "t value"],
+        test_statistic = coefs[2, "t value"],
         p_value = coefs[2, "Pr(>|t|)"]
     )
     
@@ -42,7 +44,7 @@ hetero_norm_model <- function(df) {
     result <- data.frame(
         estimate = coefs[2, "Value"],
         std_err = coefs[2, "Std.Error"],
-        t_value = coefs[2, "t-value"],
+        test_statistic = coefs[2, "t-value"],
         p_value = coefs[2, "p-value"]
     )
     
@@ -62,7 +64,7 @@ binomial_model <- function(df) {
     result <- data.frame(
         estimate = coefs[2, "Estimate"],
         std_err = coefs[2, "Std. Error"],
-        t_value = coefs[2, "z value"],
+        test_statistic = coefs[2, "z value"],
         p_value = coefs[2, "Pr(>|z|)"]
     )
     
@@ -81,7 +83,7 @@ beta_binomial_model <- function(df) {
     result <- data.frame(
         estimate = coefs[2, "Estimate"],
         std_err = coefs[2, "Std. Error"],
-        t_value = coefs[2, "z value"],
+        test_statistic = coefs[2, "z value"],
         p_value = coefs[2, "Pr(> |z|)"]
     )
     
@@ -137,8 +139,8 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
     sites <- dbGetQuery(
         con,
         "
-        SELECT transcript_id, transcript_position FROM selected_sites
-        ORDER BY transcript_id, transcript_position
+        SELECT rname, transcript_position FROM selected_sites
+        ORDER BY rname, transcript_position
         OFFSET ?
         LIMIT ?
         ",
@@ -155,11 +157,11 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
         FROM all_sites.reads
         SEMI JOIN (
             SELECT * FROM selected_sites
-            ORDER BY transcript_id, transcript_position
+            ORDER BY rname, transcript_position
             OFFSET ?
             LIMIT ?
         )
-        USING (transcript_id, transcript_position)
+        USING (rname, transcript_position)
         ",
         list(start, end - start + 1)
     )
@@ -170,7 +172,7 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
 
     reads <- df %>%
       mutate(
-        transcript_id,
+        rname,
         transcript_position,
         sample_name,
         probability_modified,
@@ -181,21 +183,6 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
       )
 
     return(list(sites=sites, reads=reads))
-    
-    # df_nested <- df %>%
-    #   mutate(
-    #     transcript_id,
-    #     transcript_position,
-    #     sample_name,
-    #     probability_modified,
-    #     group_name = factor(group_name),
-    #     logit = logit(probability_modified),
-    #     .keep = "none"
-    #   ) %>%
-    #   nest(.by = c(transcript_id, transcript_position))
-    
-    # cat("; ", nrow(df_nested), "groups\n")
-    # return(df_nested)
 }
 
 
@@ -208,13 +195,18 @@ EXONS_DB <- NULL
 
 init_exons_db <- function(gtf_file) {
   txdb <- txdbmaker::makeTxDbFromGFF(gtf_file)
-  EXONS_DB <<- exonsBy(txdb, by = "tx", use.names = TRUE)
+#   EXONS_DB <<- exonsBy(txdb, by = "tx", use.names = TRUE)
+  EXONS_DB <<- exonsBy(txdb, by = c("tx", "gene"), use.names=TRUE)
 }
 
 map_to_genome <- function(df) {
   if (is.null(EXONS_DB)) {
     stop("EXONS_DB not initialized. Run init_exons_db() first.")
   }
+
+  # extract the transcript ID from the rname; typically, this is on the whitespace or pipe:
+  # GENCODE: ENST00000832824.1|ENSG00000290825.2|-|-|DDX11L16-260|DDX11L16|1379|lncRNA|
+  df$transcript_id = str_split_i(df$rname, "[| ]", 1) 
   
   # Create GRanges from transcript coordinates (convert 0-based to 1-based)
   tx_coords <- GRanges(
@@ -222,13 +214,21 @@ map_to_genome <- function(df) {
     ranges = IRanges(start = df$transcript_position + 1, 
                      end = df$transcript_position + 1)
   )
-  
+
+  print(tx_coords)
+  print(EXONS_DB)
+
   # Map to genomic coordinates
   genomic_coords <- mapFromTranscripts(tx_coords, EXONS_DB)
+
+  # Initialize columns with NA
+  df$chr <- NA_character_
+  df$chr_position <- NA_integer_
   
-  # Extract genomic positions
-  df$genome_id <- as.character(seqnames(genomic_coords))
-  df$genome_position <- start(genomic_coords) - 1  # Convert back to 0-based
+  # Fill in mapped positions
+  mapped_indices <- mcols(genomic_coords)$xHits
+  df$chr[mapped_indices] <- as.character(seqnames(genomic_coords))
+  df$chr_position[mapped_indices] <- start(genomic_coords) - 1 # Convert back to 0-based
   
   return(df)
 }
@@ -257,7 +257,7 @@ process_modification_site <- function(df, model_type="none") {
             output_df <- data.frame(
                 estimate = NA_real_,
                 std_err = NA_real_,
-                t_value = NA_real_,
+                test_statistic = NA_real_,
                 p_value = NA_real_,
                 model_type = "none",
                 error = TRUE,
@@ -307,7 +307,7 @@ run_model <- function(df, model_type="none") {
             data.frame(
                 estimate = NA_real_,
                 std_err = NA_real_,
-                t_value = NA_real_,
+                test_statistic = NA_real_,
                 p_value = NA_real_,
                 model_type = model_type,
                 error = TRUE,
@@ -401,12 +401,13 @@ n_rows <- args$end - args$start + 1
 output_df <- data.frame(
     transcript_id = rep(NA_character_, n_rows),
     transcript_position = integer(n_rows),
-    genome_id = rep(NA_character_, n_rows),
-    genome_position = integer(n_rows),
+    rname = rep(NA_character_, n_rows),
+    chr = rep(NA_character_, n_rows),
+    chr_position = integer(n_rows),
     model_type = rep(NA_character_, n_rows),
     estimate = numeric(n_rows),
     std_err = numeric(n_rows),
-    t_value = numeric(n_rows),
+    test_statistic = numeric(n_rows),
     p_value = numeric(n_rows),
     error = logical(n_rows),
     error_message = rep(NA_character_, n_rows)
@@ -429,12 +430,13 @@ for (offset in seq(args$start, args$end - 1, by = INTERVAL)) {
     for (i in seq_len(nrow(batch$sites))) {
         site_tx_id <- batch$sites$transcript_id[i]
         site_tx_pos <- batch$sites$transcript_position[i]
-        site_gen_id <- batch$sites$genome_id[i]
-        site_gen_pos <- batch$sites$genome_position[i]
+        site_rname <- batch$sites$rname[i]
+        site_chr <- batch$sites$chr[i]
+        site_chr_pos <- batch$sites$chr_position[i]
 
         site_reads <- batch$reads %>%
             filter(
-                transcript_id == site_tx_id,
+                rname == site_rname,
                 transcript_position == site_tx_pos,
                 ignored == FALSE
             )
@@ -444,8 +446,9 @@ for (offset in seq(args$start, args$end - 1, by = INTERVAL)) {
         # add metadata to the site
         site_df$transcript_id <- site_tx_id
         site_df$transcript_position <- site_tx_pos
-        site_df$genome_id <- site_gen_id
-        site_df$genome_position <- site_gen_pos
+        site_df$rname <- site_rname
+        site_df$chr <- site_chr
+        site_df$chr_position <- site_chr_pos
 
         if (!(is.na(output_df$model_type[offset - args$start + i]))) {
             stop("Model type not recorded for site ", site_tx_id, ":", site_tx_pos)

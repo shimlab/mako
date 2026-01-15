@@ -82,7 +82,7 @@
         },
         "min_reads": {
           "type": "integer",
-          "default": 20,
+          "default": 30,
           "description": "Minimum non-ignored modifications needed at a transcript site (across all samples) to be called"
         }
       }

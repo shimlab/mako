@@ -35,7 +35,7 @@ def dorado_data_prep(file_info_list, sites_file, threads, interval_a, interval_b
     sys.stderr.flush()
 
     conn.execute(
-        "CREATE TABLE reads (sample_name VARCHAR, group_name VARCHAR, transcript_id VARCHAR, transcript_position INTEGER, probability_modified FLOAT, ignored BOOLEAN);"
+        "CREATE TABLE reads (sample_name VARCHAR, group_name VARCHAR, rname VARCHAR, transcript_position INTEGER, probability_modified FLOAT, ignored BOOLEAN);"
     )
 
     for f in file_info_list:
@@ -51,7 +51,7 @@ def dorado_data_prep(file_info_list, sites_file, threads, interval_a, interval_b
             SELECT 
                 '{sample_name}' as sample_name,
                 '{group_name}' as group_name,
-                chrom as transcript_id,
+                chrom as rname,
                 ref_position as transcript_position,
                 mod_qual as probability_modified,
                 (mod_qual BETWEEN {interval_a} AND {interval_b}) as ignored
@@ -66,7 +66,7 @@ def dorado_data_prep(file_info_list, sites_file, threads, interval_a, interval_b
     conn.execute("""
     CREATE TABLE reads_summary AS
     SELECT 
-      transcript_id,
+      rname,
       transcript_position,
       COUNT(*) AS read_count,
       COUNT(DISTINCT sample_name) AS sample_count,
@@ -76,7 +76,7 @@ def dorado_data_prep(file_info_list, sites_file, threads, interval_a, interval_b
       var_samp(probability_modified) as variance
     FROM reads
     WHERE ignored = False
-    GROUP BY transcript_id, transcript_position
+    GROUP BY rname, transcript_position
     """)
 
     conn.close()

@@ -31,7 +31,7 @@ def select_sites(conn, min_read_count):
         WHERE
             sample_count = {max_sample_count} AND
             read_count > {min_read_count}
-        ORDER BY (transcript_id, transcript_position);
+        ORDER BY (rname, transcript_position);
     """
     conn.execute(query)
 

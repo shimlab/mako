@@ -2,8 +2,10 @@ process CALL_MODEL {
     label 'single_cpu_long'
     publishDir "${params.outdir}/differential/${mod_caller}", mode: params.publish_dir_mode
 
+    container "oras://ghcr.io/olliecheng/mako_main_singularity:4bc2ea5" 
+
     input:
-    tuple val(differential_model), val(mod_caller), path(sites_db), path(reads_db), val(start), val(end)
+    tuple val(differential_model), val(mod_caller), path(sites_db), path(reads_db), val(start), val(end), path(gtf)
 
     output:
     tuple val(differential_model), val(mod_caller), path("segments/${differential_model}_${start}_to_${end}.parquet")
@@ -15,8 +17,9 @@ process CALL_MODEL {
     Rscript ${projectDir}/scripts/run_model.R \\
         --sites-database ${sites_db} \\
         --reads-database ${reads_db} \\
-        --start ${start} \\
+        --start ${start}  \\
         --end ${end} \\
+        --gtf ${gtf} \\
         --model ${differential_model} \\
         --output segments/${differential_model}_${start}_to_${end}.parquet \\
     """
@@ -46,7 +49,7 @@ process MERGE_SEGMENTS {
     script:
     """
     duckdb differential_sites_${differential_model}.duckdb \
-        "SET memory_limit='28GB'; CREATE TABLE sites AS SELECT * FROM 'segment*.parquet' ORDER BY transcript_id, transcript_position"
+        "SET memory_limit='28GB'; CREATE TABLE sites AS (SELECT * FROM 'segment*.parquet' ORDER BY transcript_id, transcript_position)"
     """
 
     stub:

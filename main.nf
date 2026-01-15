@@ -92,7 +92,7 @@ docs:   https://shimlab.github.io/mako
     segments_ch = SITE_SELECTION(reads_database_ch)
         .flatMap { mod_caller, sites_db, reads_db, segments_file ->
             def seg = segments_file.splitCsv(header: true, sep: ',')
-            seg.collect { row -> [mod_caller, sites_db, reads_db, row.start, row.end] }
+            seg.collect { row -> [mod_caller, sites_db, reads_db, row.start, row.end, file(params.gtf)] }
         }
 
     // CALL_MODEL produces [diff_caller, mod_caller, segment];
