@@ -115,11 +115,12 @@ logit <- function(p) {
 }
 
 binarize <- function(df, threshold=0.5) {
+    # compute pseudocounts for successes and failures
     binarized_df <- df %>%
         group_by(sample_name, group_name) %>%
         summarise(
-            successes = sum(probability_modified >= threshold),
-            failures = sum(probability_modified < threshold),
+            successes = sum(probability_modified >= threshold) + 1,
+            failures = sum(probability_modified < threshold) + 1,
             .groups = "keep"
         ) %>%
         ungroup()
