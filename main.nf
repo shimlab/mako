@@ -11,7 +11,7 @@ nextflow.enable.dsl = 2
 include { SAMTOOLS_SORT_INDEX ; SAMTOOLS_FLAGSTAT } from './modules/caller/dorado'
 include { MODKIT_PILEUP ; MODKIT_EXTRACT } from './modules/caller/modkit'
 include { PREP_FROM_DORADO ; PREP_FROM_M6ANET ; SITE_SELECTION } from './modules/dataprep'
-include { CALL_MODEL ; MERGE_SEGMENTS } from './modules/differential'
+include { CALL_MODEL ; FDR_CORRECTION } from './modules/differential'
 include { FLAGSTAT ; FASTQC ; NANOPLOT ; NANOCOMP } from './modules/qc'
 include { RETRIEVE_FILE; REMOVE_FILE } from './modules/caller/fs'
 
@@ -104,5 +104,5 @@ docs:   https://shimlab.github.io/mako
         .groupTuple()
         .map { it -> [it[0][0], it[0][1], it[1]] }
 
-    MERGE_SEGMENTS(diff_ch)
+    FDR_CORRECTION(diff_ch)
 }

@@ -31,29 +31,31 @@ process CALL_MODEL {
     """
 }
 
-process MERGE_SEGMENTS {
+process FDR_CORRECTION {
     label 'low_cpu'
     publishDir "${params.outdir}/differential/${mod_caller}", mode: params.publish_dir_mode
 
     // TODO: remove and use standard container once testing is complete
     container "${ workflow.containerEngine == 'singularity' ?
-    'oras://ghcr.io/olliecheng/mako_main_singularity:be76da4' :
-    'ghcr.io/olliecheng/mako_main_docker:be76da4' }"
+    'oras://ghcr.io/olliecheng/mako_main_singularity:8f1ea58' :
+    'ghcr.io/olliecheng/mako_main_docker:8f1ea58' }"
 
     input:
     tuple val(differential_model), val(mod_caller), path("segment*.parquet")
 
     output:
-    tuple val(differential_model), val(mod_caller), path("differential_sites_${differential_model}.duckdb")
+    tuple val(differential_model), val(mod_caller), path("${differential_model}_fits.tsv")
 
     script:
     """
-    duckdb differential_sites_${differential_model}.duckdb \
-        "SET memory_limit='28GB'; CREATE TABLE sites AS (SELECT * FROM 'segment*.parquet' ORDER BY transcript_id, transcript_position)"
+    python3 ${projectDir}/scripts/fdr_correction.py \
+        --alpha 0.05 \
+        --output ${differential_model}_fits.tsv \
+        segment*.parquet
     """
 
     stub:
     """
-    echo "test" > differential_sites_${differential_model}.duckdb
+    echo "test" > ${differential_model}_fits.tsv
     """
 }
