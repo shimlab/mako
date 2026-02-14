@@ -43,6 +43,8 @@ def main():
     df = (
         pd.concat([pd.read_parquet(f) for f in args.files], ignore_index=True)
         .sort_values(by=["transcript_id", "transcript_position"])
+        .query('drop != True')
+        .drop(columns=["drop"])
     )
 
     df = add_bh_corrected_pvalues(df, alpha=args.alpha)

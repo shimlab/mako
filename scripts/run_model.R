@@ -10,8 +10,6 @@ suppressPackageStartupMessages({
     library(txdbmaker)
 })
 
-options(error = traceback)
-
 
 # ==============================
 # Models
@@ -26,7 +24,8 @@ homo_norm_model <- function(df) {
         estimate = coefs[2, "Estimate"],
         std_err = coefs[2, "Std. Error"],
         test_statistic = coefs[2, "t value"],
-        p_value = coefs[2, "Pr(>|t|)"]
+        p_value = coefs[2, "Pr(>|t|)"],
+        drop = FALSE
     )
     
     return(result)
@@ -45,7 +44,8 @@ hetero_norm_model <- function(df) {
         estimate = coefs[2, "Value"],
         std_err = coefs[2, "Std.Error"],
         test_statistic = coefs[2, "t-value"],
-        p_value = coefs[2, "p-value"]
+        p_value = coefs[2, "p-value"],
+        drop = FALSE
     )
     
     return(result)
@@ -65,7 +65,8 @@ binomial_model <- function(df) {
         estimate = coefs[2, "Estimate"],
         std_err = coefs[2, "Std. Error"],
         test_statistic = coefs[2, "z value"],
-        p_value = coefs[2, "Pr(>|z|)"]
+        p_value = coefs[2, "Pr(>|z|)"],
+        drop = FALSE
     )
     
     return(result)
@@ -84,7 +85,8 @@ beta_binomial_model <- function(df) {
         estimate = coefs[2, "Estimate"],
         std_err = coefs[2, "Std. Error"],
         test_statistic = coefs[2, "z value"],
-        p_value = coefs[2, "Pr(> |z|)"]
+        p_value = coefs[2, "Pr(> |z|)"],
+        drop = FALSE
     )
     
     return(result)
@@ -219,17 +221,20 @@ map_to_genome <- function(df) {
   print(tx_coords)
   print(EXONS_DB)
 
-  # Map to genomic coordinates
-  genomic_coords <- mapFromTranscripts(tx_coords, EXONS_DB)
-
   # Initialize columns with NA
   df$chr <- NA_character_
   df$chr_position <- NA_integer_
-  
-  # Fill in mapped positions
-  mapped_indices <- mcols(genomic_coords)$xHits
-  df$chr[mapped_indices] <- as.character(seqnames(genomic_coords))
-  df$chr_position[mapped_indices] <- start(genomic_coords) - 1 # Convert back to 0-based
+
+  # check if any of the transcript IDs in tx_coords are present in EXONS_DB before attempting to map
+  if (any(names(tx_coords) %in% names(EXONS_DB))) {
+    # Map to genomic coordinates
+    genomic_coords <- mapFromTranscripts(tx_coords, EXONS_DB)
+    
+    # Fill in mapped positions
+    mapped_indices <- mcols(genomic_coords)$xHits
+    df$chr[mapped_indices] <- as.character(seqnames(genomic_coords))
+    df$chr_position[mapped_indices] <- start(genomic_coords) - 1 # Convert back to 0-based
+  }
   
   return(df)
 }
@@ -247,7 +252,7 @@ process_modification_site <- function(df, model_type="none") {
         } else if (dispersion < 1.5) {
             # run beta-binomial with binomial fallback
             output_df <- run_model(df, "beta_binomial")
-            if (output_df$error) {
+            if (isTRUE(output_df$error)) {
                 output_df <- run_model(df, "binomial")
             }
         } else if (dispersion >= 1.5) {
@@ -260,6 +265,7 @@ process_modification_site <- function(df, model_type="none") {
                 std_err = NA_real_,
                 test_statistic = NA_real_,
                 p_value = NA_real_,
+                drop = FALSE,
                 model_type = "none",
                 error = TRUE,
                 error_message = sprintf("Could not determine model for dispersion: %f", dispersion)
@@ -274,6 +280,20 @@ process_modification_site <- function(df, model_type="none") {
 
 # Function to apply statistical model to each site
 run_model <- function(df, model_type="none") {
+    # if the reads are ALL modified or ALL unmodified, we can't fit a model - return NA results and drop the site
+    if (sum(df$probability_modified >= 0.5) == 0 || sum(df$probability_modified < 0.5) == 0) {
+        return(data.frame(
+            estimate = NA_real_,
+            std_err = NA_real_,
+            test_statistic = NA_real_,
+            p_value = NA_real_,
+            drop = TRUE,
+            model_type = NA_character_,
+            error = NA,
+            error_message = NA_character_
+        ))
+    }
+
     model_func <- switch(model_type,
         homo_norm = homo_norm_model,
         hetero_norm = hetero_norm_model,
@@ -310,6 +330,7 @@ run_model <- function(df, model_type="none") {
                 std_err = NA_real_,
                 test_statistic = NA_real_,
                 p_value = NA_real_,
+                drop = FALSE,
                 model_type = model_type,
                 error = TRUE,
                 error_message = paste(
@@ -405,11 +426,12 @@ output_df <- data.frame(
     rname = rep(NA_character_, n_rows),
     chr = rep(NA_character_, n_rows),
     chr_position = integer(n_rows),
-    model_type = rep(NA_character_, n_rows),
     estimate = numeric(n_rows),
     std_err = numeric(n_rows),
     test_statistic = numeric(n_rows),
     p_value = numeric(n_rows),
+    drop = logical(n_rows),
+    model_type = rep(NA_character_, n_rows),
     error = logical(n_rows),
     error_message = rep(NA_character_, n_rows)
 )

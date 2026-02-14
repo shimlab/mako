@@ -2,7 +2,7 @@ process CALL_MODEL {
     label 'single_cpu_long'
     publishDir "${params.outdir}/differential/${mod_caller}", mode: params.publish_dir_mode
 
-    container "oras://ghcr.io/olliecheng/mako_main_singularity:4bc2ea5" 
+    container "oras://ghcr.io/olliecheng/mako_main_singularity:8f1ea58" 
 
     input:
     tuple val(differential_model), val(mod_caller), path(sites_db), path(reads_db), val(start), val(end), path(gtf)
@@ -14,11 +14,11 @@ process CALL_MODEL {
     """
     mkdir segments
 
-    Rscript ${projectDir}/scripts/run_model.R \\
+    Rscript ${projectDir}/scripts/run_model.R  \\
         --sites-database ${sites_db} \\
         --reads-database ${reads_db} \\
         --start ${start}  \\
-        --end ${end} \\
+        --end ${end}  \\
         --gtf ${gtf} \\
         --model ${differential_model} \\
         --output segments/${differential_model}_${start}_to_${end}.parquet \\
@@ -48,7 +48,7 @@ process FDR_CORRECTION {
 
     script:
     """
-    python3 ${projectDir}/scripts/fdr_correction.py \
+    python3 ${projectDir}/scripts/fdr_correction.py  \
         --alpha 0.05 \
         --output ${differential_model}_fits.tsv \
         segment*.parquet
