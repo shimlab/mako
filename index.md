@@ -17,7 +17,7 @@ The software is written in Nextflow and utilises Docker/Singularity containerisa
 
 ---
 
-![assets](assets/diagram.svg)
+![assets](https://github.com/shimlab/mako/blob/main/assets/pipeline_diagram.png?raw=true)
 
 ---
 

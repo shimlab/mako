@@ -2,6 +2,8 @@ title: Mako
 description: Mako is a pipeline for differential RNA modification calling using Nanopore direct RNA sequencing data
 theme: just-the-docs
 
+color_scheme: ocean
+
 url: https://github.com/shimlab/mako
 
 # Footer content
@@ -17,6 +19,12 @@ aux_links_new_tab: true
 
 last_edit_timestamp: false
 gh_edit_link: false # show or hide edit this page link
+
+nav_external_links:
+  - title: Mako on GitHub
+    url: https://github.com/shimlab/mako
+    hide_icon: true # set to true to hide the external link icon - defaults to false
+    opens_in_new_tab: true # set to true to open this link in a new tab - defaults to false
 
 callouts:
   highlight:
