@@ -8,6 +8,7 @@ suppressPackageStartupMessages({
     library(nanoparquet)
     library(GenomicFeatures)
     library(txdbmaker)
+    library(glmmTMB)
 })
 
 
@@ -75,17 +76,18 @@ binomial_model <- function(df) {
 beta_binomial_model <- function(df) {
     agg_df <- binarize(df)
 
-    model <- betabin(cbind(successes, failures) ~ group_name, ~1,
-        data = agg_df
+    model <- glmmTMB(cbind(successes, failures) ~ group_name,
+        data = agg_df,
+        family = glmmTMB::betabinomial(link = "logit")
     )
 
-    coefs <- summary(model)@Coef
+    coefs <- summary(model)$coefficients$cond
 
     result <- data.frame(
         estimate = coefs[2, "Estimate"],
         std_err = coefs[2, "Std. Error"],
         test_statistic = coefs[2, "z value"],
-        p_value = coefs[2, "Pr(> |z|)"],
+        p_value = coefs[2, "Pr(>|z|)"],
         drop = FALSE
     )
     
