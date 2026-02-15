@@ -64,20 +64,36 @@ def dorado_data_prep(file_info_list, sites_file, threads, interval_a, interval_b
     sys.stderr.flush()
 
     conn.execute("""
-    CREATE TABLE reads_summary AS
+    CREATE TABLE samples AS
     SELECT 
-      rname,
-      transcript_position,
-      COUNT(*) AS read_count,
-      COUNT(DISTINCT sample_name) AS sample_count,
-      MAX(probability_modified) as max_prob,
-      MIN(probability_modified) as min_prob,
-      AVG(probability_modified) as avg_probability_modified,
-      var_samp(probability_modified) as variance
+        rname,
+        transcript_position,
+        sample_name,
+        COUNT(*) AS read_count,
+        MAX(probability_modified) as max_prob,
+        MIN(probability_modified) as min_prob,
+        AVG(probability_modified) as avg_probability_modified,
+        var_samp(probability_modified) as variance
     FROM reads
     WHERE ignored = False
-    GROUP BY rname, transcript_position
+    GROUP BY rname, transcript_position, sample_name
     """)
+
+    # conn.execute("""
+    # CREATE TABLE reads_summary AS
+    # SELECT 
+    #   rname,
+    #   transcript_position,
+    #   COUNT(*) AS read_count,
+    #   COUNT(DISTINCT sample_name) AS sample_count,
+    #   MAX(probability_modified) as max_prob,
+    #   MIN(probability_modified) as min_prob,
+    #   AVG(probability_modified) as avg_probability_modified,
+    #   var_samp(probability_modified) as variance
+    # FROM reads
+    # WHERE ignored = False
+    # GROUP BY rname, transcript_position
+    # """
 
     conn.close()
     print(

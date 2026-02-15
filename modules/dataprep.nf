@@ -14,7 +14,7 @@ process PREP_FROM_DORADO {
     python3 ${projectDir}/scripts/data_prep.py \\
         --input aggregated_results.csv \\
         --method dorado \\
-        --threads '${task.cpus}' \\
+        --threads '${task.cpus}'  \\
         --prob-filter-lower-bound ${params.max_negative_prob} \\
         --prob-filter-upper-bound ${params.min_positive_prob} \\
         --output all_sites.duckdb 
@@ -66,7 +66,7 @@ process SITE_SELECTION {
     python3 ${projectDir}/scripts/select_sites.py \\
         --in-db ${database} \\
         --out-db selected_sites.db \\
-        --min-reads ${params.min_reads} \\
+        --min-reads-per-sample ${params.min_reads_per_sample} \\
         --segments segments.csv \\
         --batch-size 75000 \\
         --output-file segments.csv

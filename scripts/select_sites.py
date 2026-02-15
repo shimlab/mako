@@ -16,7 +16,7 @@ def initialise_db(conn, in_db_path):
     conn.execute(f"ATTACH '{in_db_path}' AS all_sites (READONLY);")
 
 
-def select_sites(conn, min_read_count):
+def select_sites(conn, min_reads_per_sample):
     # get number of unique samples in reads_summary
     max_sample_count = conn.execute(
         "SELECT COUNT(DISTINCT sample_name) FROM all_sites.reads"
@@ -24,16 +24,26 @@ def select_sites(conn, min_read_count):
 
     print(f"number of unique samples: {max_sample_count}", file=sys.stderr)
 
-    query = f"""
+    conn.execute(f"""
+    CREATE OR REPLACE TABLE site_summary AS
+    SELECT 
+      rname,
+      transcript_position,
+      COUNT(*) AS read_count,
+      COUNT(DISTINCT sample_name) AS sample_count
+    FROM all_sites.samples
+    WHERE read_count >= {min_reads_per_sample}
+    GROUP BY rname, transcript_position
+    """)
+
+    conn.execute(f"""
     CREATE OR REPLACE TABLE selected_sites AS
         SELECT *
-        FROM all_sites.reads_summary
+        FROM site_summary
         WHERE
-            sample_count = {max_sample_count} AND
-            read_count > {min_read_count}
+            sample_count = {max_sample_count}
         ORDER BY (rname, transcript_position);
-    """
-    conn.execute(query)
+    """)
 
     row_count = conn.execute("SELECT COUNT(*) FROM selected_sites").fetchone()[0]
     return row_count
@@ -54,10 +64,10 @@ def main():
         "--segments", help="Path to the output CSV file of segment intervals"
     )
     parser.add_argument(
-        "--min-reads",
+        "--min-reads-per-sample",
         type=int,
-        default=30,
-        help="Minimum number of reads required at a site (default: 30)",
+        default=5,
+        help="Minimum number of reads required per sample at a site (default: 5)",
     )
     parser.add_argument(
         "--batch-size",
@@ -76,7 +86,7 @@ def main():
     conn = duckdb.connect(args.out_db)
     initialise_db(conn, args.in_db)
 
-    num_sites = select_sites(conn, args.min_reads)
+    num_sites = select_sites(conn, args.min_reads_per_sample)
     conn.close()
 
     print(f"Selected {num_sites} sites meeting criteria", file=sys.stderr)
