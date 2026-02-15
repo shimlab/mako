@@ -1,75 +1,117 @@
 <!-- generated via `uvx nf-core schema docs -c parameter,description,default --format html` -->
+<!-- next, h2 was replaced with h3 -->
 
-<h2>Input/output options</h2>
+<h3>Input/output options</h3>
 <p>Define where the pipeline should find input data and save output data.</p>
 <table>
-    <thead>
-        <tr>
-            <th>Parameter</th>
-            <th>Description</th>
-            <th>Default</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>dataset_name</code></td>
-            <td>The name of this dataset, used in output files and within visualisations</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td><code>input</code></td>
-            <td>Path to comma-separated file containing information about the samples in the experiment. TODO: finish
-                samplesheet</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td><code>outdir</code></td>
-            <td>The output directory where the results will be saved. You have to use absolute paths to storage on Cloud
-                infrastructure.</td>
-            <td>results</td>
-        </tr>
-    </tbody>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>dataset_name</code></td>
+      <td>
+        The name of this dataset, used in output files and within visualisations
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>samplesheet</code></td>
+      <td>
+        Path to comma-separated file containing information about the samples in
+        the experiment.
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>outdir</code></td>
+      <td>
+        The output directory where the results will be saved. You have to use
+        absolute paths to storage on Cloud infrastructure.
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>publish_dir_mode</code></td>
+      <td>
+        How to copy output from the work directory to the output directory
+        (accepted: <code>copy</code>|<code>symlink</code>)
+      </td>
+      <td>copy</td>
+    </tr>
+  </tbody>
 </table>
-<h2>Pipeline parameters</h2>
+<h3>Pipeline parameters</h3>
 <table>
-    <thead>
-        <tr>
-            <th>Parameter</th>
-            <th>Description</th>
-            <th>Default</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>mod_method</code></td>
-            <td>The method used to call the RNA modification (accepted: <code>dorado</code>|<code>m6anet</code>)</td>
-            <td>dorado</td>
-        </tr>
-        <tr>
-            <td><code>diff_method</code></td>
-            <td>The method used to call differentially expressed sites (accepted: <code>lmer</code>|<code>modkit</code>)
-            </td>
-            <td>lmer</td>
-        </tr>
-        <tr>
-            <td><code>genome</code></td>
-            <td>The reference genome, in .fasta format</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td><code>transcriptome</code></td>
-            <td>The reference transcriptome, in .fasta format</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td><code>min_reads</code></td>
-            <td>Minimum reads needed at a site (across all samples) to be called</td>
-            <td>20</td>
-        </tr>
-        <tr>
-            <td><code>prob_threshold</code></td>
-            <td>Minimum probability detected at a site to be called</td>
-            <td>0</td>
-        </tr>
-    </tbody>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>differential_model</code></td>
+      <td>
+        Model to use to call differentially modified sites, as a comma-separated
+        list. Options: adaptive_binomial, homo_norm, hetero_norm, binomial,
+        beta_binomial (accepted:
+        <code>adaptive_binomial</code
+        >|<code>homo_norm</code>|<code>hetero_norm</code>|<code>binomial</code>|<code>beta_binomial</code>)
+      </td>
+      <td>adaptive_binomial</td>
+    </tr>
+    <tr>
+      <td><code>transcriptome</code></td>
+      <td>Reference transcriptome, in .fasta format</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>gtf</code></td>
+      <td>GTF annotation file</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+<h3>Modification calling parameters</h3>
+<p>Settings which control which sites are selected for differential calling.</p>
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>max_negative_prob</code></td>
+      <td>
+        Negative modification sites with probability within [x, 0.5] will be
+        ignored
+      </td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <td><code>min_positive_prob</code></td>
+      <td>
+        Positive modification sites with probability within [0.5, x] will be
+        ignored
+      </td>
+      <td>0.8</td>
+    </tr>
+    <tr>
+      <td><code>min_reads_per_sample</code></td>
+      <td>
+        How many reads each sample should have at a site in order for the site
+        to be considered.
+      </td>
+      <td>5</td>
+    </tr>
+  </tbody>
 </table>
