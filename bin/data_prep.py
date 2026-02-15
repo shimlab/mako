@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import duckdb
 import pandas as pd

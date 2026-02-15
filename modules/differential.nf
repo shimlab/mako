@@ -14,7 +14,7 @@ process CALL_MODEL {
     """
     mkdir segments
 
-    Rscript ${projectDir}/scripts/run_model.R  \\
+    run_model.R  \\
         --sites-database ${sites_db} \\
         --reads-database ${reads_db} \\
         --start ${start}  \\
@@ -48,7 +48,7 @@ process FDR_CORRECTION {
 
     script:
     """
-    python3 ${projectDir}/scripts/fdr_correction.py  \
+    fdr_correction.py  \
         --alpha 0.05 \
         --output ${differential_model}_fits.tsv \
         segment*.parquet

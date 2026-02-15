@@ -11,7 +11,7 @@ process PREP_FROM_DORADO {
     script:
     """
     # Prepare data from Dorado output for differential analysis
-    python3 ${projectDir}/scripts/data_prep.py \\
+    data_prep.py \\
         --input aggregated_results.csv \\
         --method dorado \\
         --threads '${task.cpus}'  \\
@@ -63,7 +63,7 @@ process SITE_SELECTION {
     script:
     """
     # Select sites for differential analysis based on the prepared data
-    python3 ${projectDir}/scripts/select_sites.py \\
+    select_sites.py \\
         --in-db ${database} \\
         --out-db selected_sites.db \\
         --min-reads-per-sample ${params.min_reads_per_sample} \\
