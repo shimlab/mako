@@ -6,6 +6,8 @@ nav_order: 6
 
 Mako comes with an interactive application called **_makoview_** which can be used to visualise the results once the pipeline has finished.
 
+![makoview screenshot](./assets/makoview.png)
+
 ## Installation
 
 makoview is a Python package for Python 3.9 — 3.12.12, available on PyPI and downloadable through your preferred Python package manager.
@@ -61,7 +63,7 @@ On HPC systems, if you have SSH access, you can port forward the web server from
 🛜 SERVER $ makoview <params> --port <abcde>
 
 # next, on your local machine, forward that port:
-👩‍💻 CLIENT $ ssh -L <abcde>:localhost:<abcde> username@hpc.server
+👩‍💻 CLIENT $ ssh -N -L <abcde>:localhost:<abcde> username@hpc.server
 ```
 
 You can now connect to Makoview locally using `http://127.0.0.1:<abcde>`.
