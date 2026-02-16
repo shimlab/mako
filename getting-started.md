@@ -56,3 +56,19 @@ Configuration settings can be found in [Configuration](configuration).
 
 {: .note }
 If your institution has an [nf-core configuration](https://nf-co.re/configs/) available, you can access it through `-profile` i.e. `-profile wehi` to use the WEHI Milton HPC. See [Execution Profiles](deployment#execution-profiles) for more.
+
+## Running makoview
+
+Once the pipeline has finished, you can run the visualisation tool `makoview` using:
+
+```bash
+export MAKO_OUTPUT_DIR="/data/gpfs/projects/punim0614/occheng/epi_differential/pipeline/runs/longbench/results"
+export MODCALLER="dorado"  # either "dorado" or "m6anet"
+export DIFFERENTIAL_MODEL="adaptive_binomial"
+uvx makoview \
+  --differential-results $MAKO_OUTPUT_DIR/differential/$MODCALLER/${DIFFERENTIAL_MODEL}_fits.tsv \
+  --modification-db $MAKO_OUTPUT_DIR/modcall/$MODCALLER/all_sites.duckdb \
+  --port 8000
+```
+
+See [makoview](makoview) for more information on alternative installation methods for Makoview and remote forwarding.
