@@ -70,26 +70,38 @@
       "description": "Settings which control which sites are selected for differential calling.",
       "default": "",
       "properties": {
-        "max_negative_prob": {
-          "type": "number",
-          "default": 0.2,
-          "description": "Negative modification sites with probability within [x, 0.5] will be ignored"
-        },
         "min_reads_per_sample": {
           "type": "integer",
           "default": 5,
           "description": "How many reads each sample should have at a site in order for the site to be considered."
         },
-        "min_positive_prob": {
+        "mod_threshold_dorado": {
           "type": "number",
-          "default": 0.8,
-          "description": "Positive modification sites with probability within [0.5, x] will be ignored"
+          "description": "A passing threshold to use with Dorado data to determine a base modification.",
+          "default": 0.5
+        },
+        "mod_filter_dorado": {
+          "type": "string",
+          "description": "Reads with a modification probability within this interval will be filtered out and not used in the Dorado model. The format should be `a,b` i.e. `0.2,0.8`. By default, no filtering is done.",
+          "pattern": "^0\\.\\d+,0\\.\\d+$"
+        },
+        "mod_threshold_m6anet": {
+          "type": "number",
+          "description": "A passing threshold to use with m6Anet data to determine a base modification.",
+          "default": 0.033379376
+        },
+        "mod_filter_m6anet": {
+          "type": "string",
+          "description": "Reads with a modification probability within this interval will be filtered out and not used in the m6Anet model. The format should be `a,b` i.e. `0.2,0.8`. By default, no filtering is done.",
+          "pattern": "^0\\.\\d+,0\\.\\d+$"
         }
       },
       "required": [
         "max_negative_prob",
+        "min_positive_prob",
         "min_reads_per_sample",
-        "min_positive_prob"
+        "mod_threshold_dorado",
+        "mod_threshold_m6anet"
       ]
     }
   },

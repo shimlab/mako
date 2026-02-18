@@ -2,8 +2,6 @@ process CALL_MODEL {
     label 'single_cpu_long'
     publishDir "${params.outdir}/differential/${mod_caller}", mode: params.publish_dir_mode
 
-    container "oras://ghcr.io/olliecheng/mako_main_singularity:8f1ea58" 
-
     input:
     tuple val(differential_model), val(mod_caller), path(sites_db), path(reads_db), val(start), val(end), path(gtf)
 
@@ -34,11 +32,6 @@ process CALL_MODEL {
 process FDR_CORRECTION {
     label 'low_cpu'
     publishDir "${params.outdir}/differential/${mod_caller}", mode: params.publish_dir_mode
-
-    // TODO: remove and use standard container once testing is complete
-    container "${ workflow.containerEngine == 'singularity' ?
-    'oras://ghcr.io/olliecheng/mako_main_singularity:8f1ea58' :
-    'ghcr.io/olliecheng/mako_main_docker:8f1ea58' }"
 
     input:
     tuple val(differential_model), val(mod_caller), path("segment*.parquet")

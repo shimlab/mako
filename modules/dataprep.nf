@@ -15,8 +15,8 @@ process PREP_FROM_DORADO {
         --input aggregated_results.csv \\
         --method dorado \\
         --threads '${task.cpus}'  \\
-        --prob-filter-lower-bound ${params.max_negative_prob} \\
-        --prob-filter-upper-bound ${params.min_positive_prob} \\
+        --prob-filter-lower-bound 2 \\
+        --prob-filter-upper-bound 3 \\
         --output all_sites.duckdb 
     """
 
