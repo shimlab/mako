@@ -237,6 +237,8 @@ map_to_genome <- function(df) {
     mapped_indices <- mcols(genomic_coords)$xHits
     df$chr[mapped_indices] <- as.character(seqnames(genomic_coords))
     df$chr_position[mapped_indices] <- start(genomic_coords) - 1 # Convert back to 0-based
+  } else {
+    cat("\nWarning: None of the transcript IDs in the input data were found in the GTF file. Genomic coordinates will be NA.\n")
   }
   
   return(df)
