@@ -97,8 +97,6 @@
         }
       },
       "required": [
-        "max_negative_prob",
-        "min_positive_prob",
         "min_reads_per_sample",
         "mod_threshold_dorado",
         "mod_threshold_m6anet"
