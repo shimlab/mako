@@ -59,8 +59,7 @@
       <td><code>differential_model</code></td>
       <td>
         Model to use to call differentially modified sites, as a comma-separated
-        list. Options: adaptive_binomial, homo_norm, hetero_norm, binomial,
-        beta_binomial (accepted:
+        list. (accepted:
         <code>adaptive_binomial</code
         >|<code>homo_norm</code>|<code>hetero_norm</code>|<code>binomial</code>|<code>beta_binomial</code>)
       </td>
@@ -90,28 +89,48 @@
   </thead>
   <tbody>
     <tr>
-      <td><code>max_negative_prob</code></td>
-      <td>
-        Negative modification sites with probability within [x, 0.5] will be
-        ignored
-      </td>
-      <td>0.2</td>
-    </tr>
-    <tr>
-      <td><code>min_positive_prob</code></td>
-      <td>
-        Positive modification sites with probability within [0.5, x] will be
-        ignored
-      </td>
-      <td>0.8</td>
-    </tr>
-    <tr>
       <td><code>min_reads_per_sample</code></td>
       <td>
         How many reads each sample should have at a site in order for the site
         to be considered.
       </td>
       <td>5</td>
+    </tr>
+    <tr>
+      <td><code>mod_threshold_dorado</code></td>
+      <td>
+        A passing threshold to use with Dorado data to determine a base
+        modification.
+      </td>
+      <td>0.5</td>
+    </tr>
+    <tr>
+      <td><code>mod_filter_dorado</code></td>
+      <td>
+        Reads with a modification probability within this interval will be
+        filtered out and not used in the Dorado model. The format should be
+        <code>a,b</code> i.e. <code>0.2,0.8</code>. By default, no filtering is
+        done.
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><code>mod_threshold_m6anet</code></td>
+      <td>
+        A passing threshold to use with m6Anet data to determine a base
+        modification.
+      </td>
+      <td>0.033379376</td>
+    </tr>
+    <tr>
+      <td><code>mod_filter_m6anet</code></td>
+      <td>
+        Reads with a modification probability within this interval will be
+        filtered out and not used in the m6Anet model. The format should be
+        <code>a,b</code> i.e. <code>0.2,0.8</code>. By default, no filtering is
+        done.
+      </td>
+      <td></td>
     </tr>
   </tbody>
 </table>

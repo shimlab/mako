@@ -15,6 +15,9 @@ The software is written in Nextflow and utilises Docker/Singularity containerisa
 {: .highlight }
 **See [Getting Started](getting-started) for instructions on how to install and run the pipeline.**
 
+{: .note }
+**mako** is in active development and not all features are supported. See [Configuration](configuration) for a list of what features are in-progress.
+
 ---
 
 ![assets](./assets/diagram.svg)
@@ -23,12 +26,12 @@ The software is written in Nextflow and utilises Docker/Singularity containerisa
 
 ## Steps of the pipeline
 
-1. Basecalling with dorado
-2. Choice of modification caller:
-   1. Dorado
-   2. m6Anet
-3. Site-level aggregation, filtering, and selection
-4. Choice of differential analysis methods:
-   1. Linear mixed-effects models
-   2. Modkit
-5. Visualization of results
+1. Sample and read QC
+2. Site-level aggregation, filtering, and selection
+3. Choice of differential analysis methods:
+   1. Either binomial or beta-binomial, depending on the dispersion (**default**)
+   2. Binomial
+   3. Beta-binomial
+   4. Homoscedastic normal
+   5. Heteroscedastic normal
+4. Visualization of results via _makoview_
