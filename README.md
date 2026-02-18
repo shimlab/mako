@@ -16,8 +16,11 @@ Mako will also produce interactive visualisations for quality control and assess
 1. Sample and read QC
 2. Site-level aggregation, filtering, and selection
 3. Choice of differential analysis methods:
-    1. Linear mixed-effects models
-    2. Modkit
+    1. Either binomial or beta-binomial, depending on the dispersion (**default**)
+    2. Binomial
+    3. Beta-binomial
+    4. Homoscedastic normal
+    5. Heteroscedastic normal
 4. Visualization of results via *makoview*
 
 ![mako pipeline diagram](https://github.com/shimlab/mako/blob/main/assets/pipeline_diagram.svg)
