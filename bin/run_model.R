@@ -252,15 +252,12 @@ process_modification_site <- function(df, model_type="none") {
         if (dispersion <= 1.0) {
             # run binomial model
             output_df <- run_model(df, "binomial")
-        } else if (dispersion < 1.5) {
+        } else if (dispersion > 1.0) {
             # run beta-binomial with binomial fallback
             output_df <- run_model(df, "beta_binomial")
             if (isTRUE(output_df$error)) {
                 output_df <- run_model(df, "binomial")
             }
-        } else if (dispersion >= 1.5) {
-            # run beta-binomial model
-            output_df <- run_model(df, "beta_binomial")
         } else {
             # could not determine model - produce error
             output_df <- data.frame(
