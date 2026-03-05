@@ -7,7 +7,7 @@ nav_order: 5
 This page describes the output files and folder structure of Mako.
 
 ```
-├── 📁 results
+└── 📁 results
     ├── 📁 basecall
     │   └── 📁 <sampleX>
     │       ├── basecalled_sorted.bam
@@ -18,18 +18,15 @@ This page describes the output files and folder structure of Mako.
     │       └── 📁 nanoplot
     │           └── * assorted nanoplot output files
     ├── 📁 modcall
-    │   ├── 📁 dorado
-    │   │   ├── all_sites.duckdb
-    │   │   └── <sample>
-    │   │       ├── modifications_<sample>.tsv
-    │   │       ├── pileup_<sample>.bed.gz
-    │   │       └── pileup_<sample>.bed.gz.tbi
-    │   └── 📁 m6anet
-    │       └── all_sites.duckdb
+    │   └── 📁 dorado
+    │       ├── all_sites.duckdb
+    │       └── <sample>
+    │           ├── modifications_<sample>.tsv
+    │           ├── pileup_<sample>.bed.gz
+    │           └── pileup_<sample>.bed.gz.tbi
     └── 📁 differential
         ├── 📁 dorado
         │   ├── <model>_fits.tsv
-        │   ├── all_sites.duckdb
         │   ├── differential_sites_<model>.duckdb
         │   ├── 📁 segments
         │   │   └── <model>_<start>_to_<end>.parquet
@@ -38,7 +35,6 @@ This page describes the output files and folder structure of Mako.
         │   └── subset.duckdb
         └── 📁 m6anet
             ├── <model>_fits.tsv
-            ├── all_sites.duckdb
             ├── differential_sites_<model>.duckdb
             ├── 📁 segments
             │   └── <model>_<start>_to_<end>.parquet
