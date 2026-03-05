@@ -43,7 +43,7 @@ process MODKIT_EXTRACT {
     path ref
 
     output:
-    tuple val(sample_name), val(group), path("modifications_${sample_name}.tsv")
+    tuple val(sample_name), val(group), path("modifications_${sample_name}.tsv.gz")
 
     script:
     """
@@ -56,7 +56,7 @@ process MODKIT_EXTRACT {
 
     # Sort reads.tsv by column 4 (chrom), then column 3 (ref_position)
     (head -n 1 reads_unsorted.tsv && \
-     tail -n +2 reads_unsorted.tsv | sort -k4,4 -k3,3n --parallel ${task.cpus}) > modifications_${sample_name}.tsv
+     tail -n +2 reads_unsorted.tsv | sort -k4,4 -k3,3n --parallel ${task.cpus}) | gzip > modifications_${sample_name}.tsv.gz
 
     # delete unsorted file to save space
     rm reads_unsorted.tsv
@@ -64,6 +64,6 @@ process MODKIT_EXTRACT {
 
     stub:
     """
-    touch modifications_${sample_name}.tsv
+    touch modifications_${sample_name}.tsv.gz
     """
 }

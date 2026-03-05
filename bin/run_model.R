@@ -119,7 +119,9 @@ logit <- function(p) {
     log((p + eps) / (1 - p + eps))
 }
 
-binarize <- function(df, threshold=0.5) {
+binarize <- function(df) {
+    threshold = args$modification_threshold
+
     # compute pseudocounts for successes and failures
     binarized_df <- df %>%
         group_by(sample_name, group_name) %>%
@@ -162,30 +164,23 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
         SELECT *
         FROM all_sites.reads
         SEMI JOIN (
-            SELECT * FROM selected_sites
+            SELECT rname, transcript_position FROM selected_sites
             ORDER BY rname, transcript_position
             OFFSET ?
             LIMIT ?
-        )
-        USING (rname, transcript_position)
+        ) USING (rname, transcript_position)
         ",
-        list(start, end - start + 1)
+        list(start, end - start + 1),
     )
-    
+
     cat("  ", nrow(df), "rows\n")
 
     dbDisconnect(con)
 
     reads <- df %>%
       mutate(
-        rname,
-        transcript_position,
-        sample_name,
-        probability_modified,
-        ignored,
         group_name = factor(group_name),
-        logit = logit(probability_modified),
-        .keep = "none"
+        logit = logit(probability_modified)
       )
 
     return(list(sites=sites, reads=reads))
@@ -201,7 +196,6 @@ EXONS_DB <- NULL
 
 init_exons_db <- function(gtf_file) {
   txdb <- txdbmaker::makeTxDbFromGFF(gtf_file)
-#   EXONS_DB <<- exonsBy(txdb, by = "tx", use.names = TRUE)
   EXONS_DB <<- exonsBy(txdb, by = c("tx", "gene"), use.names=TRUE)
 }
 
@@ -364,6 +358,14 @@ get_args <- function() {
             type = "character", default = NULL,
             help = "Path to the reads DuckDB database", metavar = "character"
         ),
+        make_option(c("--min-reads-per-sample"),
+            type = "integer", default = 5L,
+            help = "Minimum reads per sample required to include a site [default=%default]", metavar = "number"
+        ),
+        make_option(c("--modification-threshold"),
+            type = "double", default = 0.5,
+            help = "Threshold for binarizing modification status (for binomial models) [default=%default]", metavar = "number"
+        ),
         make_option(c("--start"),
             type = "integer",
             help = "Start index for data processing [default=%default]", metavar = "number"
@@ -400,8 +402,9 @@ get_args <- function() {
     }
 
     cat("Parameters:\n")
-    cat("  Sites database:", args$sites_database, "\n")
     cat("  Reads database:", args$reads_database, "\n")
+    cat("  Min reads per sample:", args$min_reads_per_sample, "\n")
+    cat("  Modification threshold:", args$modification_threshold, "\n")
     cat("  Start index:", args$start, "\n")
     cat("  End index:", args$end, "\n")
     cat("  Model:", args$model, "\n")
@@ -419,6 +422,11 @@ get_args <- function() {
 args <- get_args()
 
 init_exons_db(args$gtf)
+
+# fetch all sample names once before the loop
+con_init <- dbConnect(duckdb(), dbdir = args$reads_database, read_only = TRUE)
+all_sample_names <- dbGetQuery(con_init, "SELECT DISTINCT sample_name FROM reads")$sample_name
+dbDisconnect(con_init)
 
 # preallocate
 n_rows <- args$end - args$start + 1

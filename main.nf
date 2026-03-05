@@ -63,13 +63,19 @@ docs:   https://shimlab.github.io/mako
     // parse differential model
     differential_models_ch = channel.from(params.differential_model.tokenize(",")).map { it -> it.trim() }
 
-    basecalled_ch = samples_ch.map { it -> [it.name, it.group, file(it.path_dorado)] }
 
-    basecalled_ch
+    // ======================
+    // dorado workflow
+    // ======================
+    dorado_basecalled_ch = samples_ch
+        .filter { it -> it.path_dorado }
+        .map { it -> [it.name, it.group, file(it.path_dorado)] }
+
+    dorado_basecalled_ch
         .map { sample_name, _group, bam -> [sample_name, bam] }
         .set { qc_bam_ch }
 
-    sorted_bam_ch = SAMTOOLS_SORT_INDEX(basecalled_ch)
+    sorted_bam_ch = SAMTOOLS_SORT_INDEX(dorado_basecalled_ch)
 
     // post-basecalling QC
     FLAGSTAT(qc_bam_ch)
@@ -81,16 +87,43 @@ docs:   https://shimlab.github.io/mako
     MODKIT_PILEUP(sorted_bam_ch, file(params.transcriptome))
     modkit_extract_ch = MODKIT_EXTRACT(sorted_bam_ch, file(params.transcriptome))
 
-    aggregated_results = modkit_extract_ch
+    dorado_sites_ch = modkit_extract_ch
         .collectFile(keepHeader: true, skip: 1) {
             it -> ["dorado_extracted_sites.csv","sample_name,group,file_path\n${it[0]},${it[1]},${it[2]}\n"]
         }
     
-    reads_database_ch = PREP_FROM_DORADO(aggregated_results.map { it -> ["dorado", it] })
+    dorado_paths_ch = samples_ch.filter {it -> it.path_dorado }.collect { it -> file(it.path_dorado) }
+    dorado_reads_ch = PREP_FROM_DORADO(dorado_sites_ch.map { it -> ["dorado", it] }, dorado_paths_ch)
         .first() // convert to value channel
 
-    segments_ch = SITE_SELECTION(reads_database_ch)
-        .flatMap { mod_caller, sites_db, reads_db, segments_file ->
+
+    // ======================
+    // m6Anet workflow
+    // ======================
+    m6anet_sites_ch = samples_ch
+        .filter { it -> it.path_m6anet }
+        .collectFile(keepHeader: true, skip: 1) {
+            it -> ["m6anet_extracted_sites.csv","sample_name,group,file_path\n${it.name},${it.group},${it.path_m6anet}\n"]
+        }
+
+    m6anet_paths_ch = samples_ch.filter {it -> it.path_m6anet }.collect { it -> file(it.path_m6anet) }
+    m6anet_reads_ch = PREP_FROM_M6ANET(m6anet_sites_ch.map { it -> ["m6anet", it] }, m6anet_paths_ch)
+        .first() // convert to value channel
+
+
+    // ======================
+    // differential analysis
+    // ======================
+
+    // reads_ch: [mod_caller, reads_db]
+    reads_ch = dorado_reads_ch.mix(m6anet_reads_ch)
+
+    // site_selection_ch: [mod_caller, selected_sites.db, segments.csv]
+    site_selection_ch = SITE_SELECTION(reads_ch)
+
+    segments_ch = reads_ch
+        .join(site_selection_ch, by: 0)
+        .flatMap { mod_caller, reads_db, sites_db, segments_file ->
             def seg = segments_file.splitCsv(header: true, sep: ',')
             seg.collect { row -> [mod_caller, sites_db, reads_db, row.start, row.end, file(params.gtf)] }
         }

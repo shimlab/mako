@@ -4,6 +4,7 @@ process PREP_FROM_DORADO {
 
     input:
     tuple val(mod_caller), path("aggregated_results.csv")
+    path 'files'
 
     output:
     tuple val(mod_caller), path("all_sites.duckdb")
@@ -14,15 +15,15 @@ process PREP_FROM_DORADO {
     data_prep.py \\
         --input aggregated_results.csv \\
         --method dorado \\
-        --threads '${task.cpus}'  \\
-        --prob-filter-lower-bound 2 \\
-        --prob-filter-upper-bound 3 \\
-        --output all_sites.duckdb 
+        --batch-size 75000 \\
+        --threads '${task.cpus}' \\
+        --probability-bound '${params.mod_filter_dorado}' \\
+        --database all_sites.duckdb 
     """
 
     stub:
     """
-    cat aggregated_results.csv > all_sites.duckdb
+    echo "all_sites.duckdb" > all_sites.duckdb
     """
 }
 
@@ -31,20 +32,27 @@ process PREP_FROM_M6ANET {
     tag "m6anet"
 
     input:
-    val step1_results
+    tuple val(mod_caller), path("aggregated_results.csv")
+    path 'files'
 
     output:
-    path "sites.tsv"
+    tuple val(mod_caller), path("all_sites.duckdb")
 
     script:
     """
     # Prepare data from m6Anet output for differential analysis
-    echo "Not implemented yet"
+    data_prep.py \\
+        --input aggregated_results.csv \\
+        --method m6anet \\
+        --batch-size 75000 \\
+        --threads '${task.cpus}' \\
+        --probability-bound '${params.mod_filter_m6anet}' \\
+        --database all_sites.duckdb 
     """
 
     stub:
     """
-    touch sites.tsv
+    echo "all_sites.duckdb" > all_sites.duckdb
     """
 }
 
@@ -56,9 +64,7 @@ process SITE_SELECTION {
     tuple val(mod_caller), path(database)
 
     output:
-    tuple val(mod_caller), path("selected_sites.db"), path(database), path("segments.csv")
-    // path "selected_sites.db"
-    // path "segments.csv"
+    tuple val(mod_caller), path("selected_sites.db"), path("segments.csv")
 
     script:
     """

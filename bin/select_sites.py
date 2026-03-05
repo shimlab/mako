@@ -26,25 +26,37 @@ def select_sites(conn, min_reads_per_sample):
 
     print(f"number of unique samples: {max_sample_count}", file=sys.stderr)
 
-    conn.execute(f"""
-    CREATE OR REPLACE TABLE site_summary AS
+    conn.execute("""
+    CREATE TABLE sample_sites AS
     SELECT 
-      rname,
-      transcript_position,
-      COUNT(*) AS read_count,
-      COUNT(DISTINCT sample_name) AS sample_count
-    FROM all_sites.samples
-    WHERE read_count >= {min_reads_per_sample}
-    GROUP BY rname, transcript_position
+        rname,
+        transcript_position,
+        sample_name,
+        COUNT(*) AS read_count,
+        MAX(probability_modified) as max_prob,
+        MIN(probability_modified) as min_prob,
+        AVG(probability_modified) as avg_probability_modified,
+        var_samp(probability_modified) as variance
+    FROM all_sites.reads
+    WHERE ignored = False
+    GROUP BY rname, transcript_position, sample_name
     """)
 
     conn.execute(f"""
-    CREATE OR REPLACE TABLE selected_sites AS
-        SELECT *
-        FROM site_summary
-        WHERE
-            sample_count = {max_sample_count}
-        ORDER BY (rname, transcript_position);
+    CREATE TABLE selected_sites AS
+    SELECT 
+        rname,
+        transcript_position,
+        COUNT(DISTINCT sample_name) AS sample_count,
+        SUM(read_count) AS total_read_count,
+        MAX(max_prob) as max_prob,
+        MIN(min_prob) as min_prob,
+        AVG(avg_probability_modified) as avg_probability_modified
+    FROM sample_sites
+    WHERE read_count >= {min_reads_per_sample}
+    GROUP BY rname, transcript_position
+    HAVING COUNT(DISTINCT sample_name) = {max_sample_count}
+    ORDER BY rname, transcript_position
     """)
 
     row_count = conn.execute("SELECT COUNT(*) FROM selected_sites").fetchone()[0]
@@ -60,7 +72,7 @@ def main():
     )
     parser.add_argument(
         "--out-db",
-        help="Path to the output DuckDB database file (will contain in_db as a view)",
+        help="Path to the output DuckDB database file",
     )
     parser.add_argument(
         "--segments", help="Path to the output CSV file of segment intervals"

@@ -15,11 +15,13 @@ process CALL_MODEL {
     run_model.R  \\
         --sites-database ${sites_db} \\
         --reads-database ${reads_db} \\
+        --min-reads-per-sample ${params.min_reads_per_sample} \\
+        --modification-threshold 0.5 \\
         --start ${start}  \\
         --end ${end}  \\
-        --gtf ${gtf} \\
         --model ${differential_model} \\
         --output segments/${differential_model}_${start}_to_${end}.parquet \\
+        --gtf ${gtf}
     """
 
     stub:
