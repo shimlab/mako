@@ -9,7 +9,7 @@ nav_order: 3
 
 <ul>
 <li>Certain QC visualisations, such as the metagene plot</li>
-<li>Transcriptome to genome mapping
+<li>Transcriptome to genome mapping</li>
 <li>Post-differential expression calling visualisation</li>
 </ul>
 
