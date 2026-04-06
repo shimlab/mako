@@ -43,7 +43,7 @@ def select_sites(conn, min_reads_per_sample):
     """)
 
     conn.execute(f"""
-    CREATE TABLE selected_sites AS
+    CREATE TABLE sites AS
     SELECT 
         rname,
         transcript_position,
@@ -51,15 +51,15 @@ def select_sites(conn, min_reads_per_sample):
         SUM(read_count) AS total_read_count,
         MAX(max_prob) as max_prob,
         MIN(min_prob) as min_prob,
-        AVG(avg_probability_modified) as avg_probability_modified
+        AVG(avg_probability_modified) as avg_probability_modified,
+        (COUNT(DISTINCT sample_name) == {max_sample_count}) AS selected
     FROM sample_sites
     WHERE read_count >= {min_reads_per_sample}
     GROUP BY rname, transcript_position
-    HAVING COUNT(DISTINCT sample_name) = {max_sample_count}
     ORDER BY rname, transcript_position
     """)
 
-    row_count = conn.execute("SELECT COUNT(*) FROM selected_sites").fetchone()[0]
+    row_count = conn.execute("SELECT COUNT(*) FROM sites WHERE selected = TRUE").fetchone()[0]
     return row_count
 
 

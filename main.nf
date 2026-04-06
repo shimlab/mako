@@ -119,7 +119,7 @@ docs:   https://shimlab.github.io/mako
     reads_ch = dorado_reads_ch.mix(m6anet_reads_ch)
 
     // site_selection_ch: [mod_caller, selected_sites.db, segments.csv]
-    site_selection_ch = SITE_SELECTION(reads_ch)
+    site_selection_ch = SITE_SELECTION(reads_ch, file(params.gtf))
 
     segments_ch = reads_ch
         .join(site_selection_ch, by: 0)

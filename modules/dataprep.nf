@@ -62,20 +62,23 @@ process SITE_SELECTION {
 
     input:
     tuple val(mod_caller), path(database)
+    path(gtf)
 
     output:
-    tuple val(mod_caller), path("selected_sites.db"), path("segments.csv")
+    tuple val(mod_caller), path("sites.duckdb"), path("segments.csv")
 
     script:
     """
     # Select sites for differential analysis based on the prepared data
     select_sites.py \\
         --in-db ${database} \\
-        --out-db selected_sites.db \\
+        --out-db sites.duckdb \\
         --min-reads-per-sample ${params.min_reads_per_sample} \\
         --segments segments.csv \\
         --batch-size 75000 \\
         --output-file segments.csv
+    
+    map_to_genome.R sites.duckdb ${gtf}
     """
 
     stub:
@@ -86,6 +89,6 @@ process SITE_SELECTION {
     echo "2001,3000" >> segments.csv
     echo "3001,4000" >> segments.csv
 
-    touch selected_sites.db
+    touch sites.duckdb
     """
 }

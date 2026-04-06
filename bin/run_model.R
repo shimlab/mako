@@ -7,8 +7,6 @@ suppressPackageStartupMessages({
     library(nlme)
     library(aod)
     library(nanoparquet)
-    library(GenomicFeatures)
-    library(txdbmaker)
     library(glmmTMB)
 })
 
@@ -147,7 +145,8 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
     sites <- dbGetQuery(
         con,
         "
-        SELECT rname, transcript_position FROM selected_sites
+        SELECT rname, transcript_position, chr, chr_position, transcript_id FROM sites
+        WHERE selected = TRUE
         ORDER BY rname, transcript_position
         OFFSET ?
         LIMIT ?
@@ -155,16 +154,17 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
         list(start, end - start + 1)
     )
 
-    sites <- map_to_genome(sites)
 
     # get corresponding reads
+    # we don't need chr/transcript_id since we only join on rname and transcript_position later on
     df <- dbGetQuery(
         con,
         "
         SELECT *
         FROM all_sites.reads
         SEMI JOIN (
-            SELECT rname, transcript_position FROM selected_sites
+            SELECT rname, transcript_position FROM sites
+            WHERE selected = TRUE
             ORDER BY rname, transcript_position
             OFFSET ?
             LIMIT ?
@@ -184,58 +184,6 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
       )
 
     return(list(sites=sites, reads=reads))
-}
-
-
-# =============================
-# Transcriptome -> genome mapping
-# =============================
-
-# Build once and store globally
-EXONS_DB <- NULL
-
-init_exons_db <- function(gtf_file) {
-  txdb <- txdbmaker::makeTxDbFromGFF(gtf_file)
-  EXONS_DB <<- exonsBy(txdb, by = c("tx", "gene"), use.names=TRUE)
-}
-
-map_to_genome <- function(df) {
-  if (is.null(EXONS_DB)) {
-    stop("EXONS_DB not initialized. Run init_exons_db() first.")
-  }
-
-  # extract the transcript ID from the rname; typically, this is on the whitespace or pipe:
-  # GENCODE: ENST00000832824.1|ENSG00000290825.2|-|-|DDX11L16-260|DDX11L16|1379|lncRNA|
-  df$transcript_id = str_split_i(df$rname, "[| ]", 1) 
-  
-  # Create GRanges from transcript coordinates (convert 0-based to 1-based)
-  tx_coords <- GRanges(
-    seqnames = df$transcript_id,
-    ranges = IRanges(start = df$transcript_position + 1, 
-                     end = df$transcript_position + 1)
-  )
-
-  print(tx_coords)
-  print(EXONS_DB)
-
-  # Initialize columns with NA
-  df$chr <- NA_character_
-  df$chr_position <- NA_integer_
-
-  # check if any of the transcript IDs in tx_coords are present in EXONS_DB before attempting to map
-  if (any(names(tx_coords) %in% names(EXONS_DB))) {
-    # Map to genomic coordinates
-    genomic_coords <- mapFromTranscripts(tx_coords, EXONS_DB)
-    
-    # Fill in mapped positions
-    mapped_indices <- mcols(genomic_coords)$xHits
-    df$chr[mapped_indices] <- as.character(seqnames(genomic_coords))
-    df$chr_position[mapped_indices] <- start(genomic_coords) - 1 # Convert back to 0-based
-  } else {
-    cat("\nWarning: None of the transcript IDs in the input data were found in the GTF file. Genomic coordinates will be NA.\n")
-  }
-  
-  return(df)
 }
 
 # ==============================
@@ -421,7 +369,6 @@ get_args <- function() {
 # Only run main script if this file is executed directly (not sourced)
 args <- get_args()
 
-init_exons_db(args$gtf)
 
 # fetch all sample names once before the loop
 con_init <- dbConnect(duckdb(), dbdir = args$reads_database, read_only = TRUE)

@@ -26,3 +26,4 @@ all_sites.duckdb
 .Rproj.user
 
 visualisation/
+sync.sh
