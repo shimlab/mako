@@ -4,3 +4,4 @@ numpy==2.2.3
 nbconvert==7.16.6
 statsmodels==0.14.5
 pyarrow==23.0.0
+pysam==0.24.0
