@@ -80,6 +80,11 @@ beta_binomial_model <- function(df) {
         family = glmmTMB::betabinomial(link = "logit")
     )
 
+    disp_val <- summary(model)$sigma
+    if (disp_val > 1e5) {
+        stop(sprintf("Dispersion parameter too large: %f", disp_val))
+    }
+
     coefs <- summary(model)$coefficients$cond
 
     result <- data.frame(
