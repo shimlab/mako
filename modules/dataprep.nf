@@ -1,6 +1,7 @@
+// TODO: remove val(mod_caller)... it is obvious by virtue that the process is called PREP_FROM_DORADO
 process PREP_FROM_DORADO {
     label 'high_cpu'
-    publishDir "${params.outdir}/modcall/${mod_caller}", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/db/${mod_caller}", mode: params.publish_dir_mode
 
     input:
     tuple val(mod_caller), path("aggregated_results.csv")

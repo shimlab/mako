@@ -11,6 +11,7 @@ nextflow.enable.dsl = 2
 include { SAMTOOLS_SORT_INDEX ; SAMTOOLS_FLAGSTAT } from './modules/caller/dorado'
 include { MODKIT_PILEUP ; MODKIT_EXTRACT } from './modules/caller/modkit'
 include { PREP_FROM_DORADO ; PREP_FROM_M6ANET ; SITE_SELECTION } from './modules/dataprep'
+include { PREP_COVERAGE } from './modules/coverage'
 include { CALL_MODEL ; FDR_CORRECTION } from './modules/differential'
 include { FLAGSTAT ; FASTQC ; NANOPLOT ; NANOCOMP } from './modules/qc'
 include { RETRIEVE_FILE; REMOVE_FILE } from './modules/caller/fs'
@@ -63,6 +64,9 @@ docs:   https://shimlab.github.io/mako
     // parse differential model
     differential_models_ch = channel.from(params.differential_model.tokenize(",")).map { it -> it.trim() }
 
+    // compute coverage from data
+    dorado_paths_ch = samples_ch.filter { it -> it.path_dorado }.collect { it -> file(it.path_dorado) }
+    PREP_COVERAGE(file(params.samplesheet), dorado_paths_ch)
 
     // ======================
     // dorado workflow
@@ -74,6 +78,7 @@ docs:   https://shimlab.github.io/mako
     dorado_basecalled_ch
         .map { sample_name, _group, bam -> [sample_name, bam] }
         .set { qc_bam_ch }
+
 
     sorted_bam_ch = SAMTOOLS_SORT_INDEX(dorado_basecalled_ch)
 
@@ -92,7 +97,6 @@ docs:   https://shimlab.github.io/mako
             it -> ["dorado_extracted_sites.csv","sample_name,group,file_path\n${it[0]},${it[1]},${it[2]}\n"]
         }
     
-    dorado_paths_ch = samples_ch.filter {it -> it.path_dorado }.collect { it -> file(it.path_dorado) }
     dorado_reads_ch = PREP_FROM_DORADO(dorado_sites_ch.map { it -> ["dorado", it] }, dorado_paths_ch)
         .first() // convert to value channel
 
