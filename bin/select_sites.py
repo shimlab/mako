@@ -30,6 +30,7 @@ def select_sites(conn, min_reads_per_sample):
     CREATE TABLE sample_sites AS
     SELECT 
         rname,
+        transcript_id,
         transcript_position,
         sample_name,
         COUNT(*) AS read_count,
@@ -39,13 +40,14 @@ def select_sites(conn, min_reads_per_sample):
         var_samp(probability_modified) as variance
     FROM all_sites.reads
     WHERE ignored = False
-    GROUP BY rname, transcript_position, sample_name
+    GROUP BY rname, transcript_id, transcript_position, sample_name
     """)
 
     conn.execute(f"""
     CREATE TABLE sites AS
     SELECT 
         rname,
+        transcript_id,
         transcript_position,
         COUNT(DISTINCT sample_name) AS sample_count,
         SUM(read_count) AS total_read_count,
@@ -55,8 +57,8 @@ def select_sites(conn, min_reads_per_sample):
         (COUNT(DISTINCT sample_name) == {max_sample_count}) AS selected
     FROM sample_sites
     WHERE read_count >= {min_reads_per_sample}
-    GROUP BY rname, transcript_position
-    ORDER BY rname, transcript_position
+    GROUP BY rname, transcript_id, transcript_position
+    ORDER BY rname, transcript_id, transcript_position
     """)
 
     row_count = conn.execute("SELECT COUNT(*) FROM sites WHERE selected = TRUE").fetchone()[0]

@@ -21,9 +21,6 @@ conn <- dbConnect(duckdb(), dbdir = db_path, read_only = TRUE)
 df <- dbGetQuery(conn, "SELECT * FROM sites")
 dbDisconnect(conn)
 
-# extract transcript_id from rname
-df$transcript_id = str_split_i(df$rname, "[| ]", 1) 
-
 tx_coords <- GRanges(
   seqnames = df$transcript_id,
   ranges = IRanges(

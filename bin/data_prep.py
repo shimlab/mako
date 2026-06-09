@@ -36,7 +36,7 @@ def dorado_data_prep(file_info_list, args):
     sys.stderr.flush()
 
     conn.execute(
-        "CREATE TABLE reads (sample_name VARCHAR, group_name VARCHAR, rname VARCHAR, transcript_position INTEGER, probability_modified FLOAT, ignored BOOLEAN);"
+        "CREATE TABLE reads (sample_name VARCHAR, group_name VARCHAR, rname VARCHAR, transcript_id VARCHAR, transcript_position INTEGER, probability_modified FLOAT, ignored BOOLEAN);"
     )
 
     for f in file_info_list:
@@ -53,6 +53,7 @@ def dorado_data_prep(file_info_list, args):
                 '{sample_name}' as sample_name,
                 '{group_name}' as group_name,
                 chrom as rname,
+                regexp_extract(chrom, '^[^| ]+') as transcript_id,
                 ref_position as transcript_position,
                 mod_qual as probability_modified,
                 NOT (mod_qual <= {args.probability_bound_lower} OR mod_qual >= {args.probability_bound_upper}) as ignored
@@ -60,9 +61,6 @@ def dorado_data_prep(file_info_list, args):
         """)
 
         # removed ORDER BY chrom, ref_position; since reads.tsv should now be already sorted
-
-    print(datetime.now(), "Creating summary table...", file=sys.stderr)
-
 
     print(
         f"{datetime.now()} Successfully loaded {len(file_info_list)} files into {args.database}",
@@ -89,7 +87,7 @@ def m6anet_data_prep(csv_file, args):
     conn.execute(f"SET threads TO {args.threads};")
 
     conn.execute(
-        "CREATE TABLE reads (sample_name VARCHAR, group_name VARCHAR, rname VARCHAR, transcript_position INTEGER, probability_modified FLOAT, modification_type VARCHAR, ignored BOOLEAN);"
+        "CREATE TABLE reads (sample_name VARCHAR, group_name VARCHAR, rname VARCHAR, transcript_id VARCHAR, transcript_position INTEGER, probability_modified FLOAT, modification_type VARCHAR, ignored BOOLEAN);"
     )
 
     for f in file_info_list:
@@ -106,6 +104,7 @@ def m6anet_data_prep(csv_file, args):
                 '{sample_name}' as sample_name,
                 '{group_name}' as group_name,
                 transcript_id as rname,
+                transcript_id as transcript_id,
                 transcript_position as transcript_position,
                 probability_modified as probability_modified,
                 'm6a' as modification_type,
