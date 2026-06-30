@@ -53,6 +53,10 @@
             "beta_binomial"
           ]
         },
+        "genome": {
+          "type": "string",
+          "description": "Reference genome, in .fasta format"
+        },
         "transcriptome": {
           "type": "string",
           "description": "Reference transcriptome, in .fasta format"
@@ -62,7 +66,7 @@
           "description": "GTF annotation file"
         }
       },
-      "required": ["differential_model", "transcriptome", "gtf"]
+      "required": ["differential_model", "transcriptome", "gtf", "genome"]
     },
     "modification_calling_parameters": {
       "title": "Modification calling parameters",

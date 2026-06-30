@@ -15,6 +15,7 @@ include { PREP_COVERAGE } from './modules/coverage'
 include { CALL_MODEL ; FDR_CORRECTION } from './modules/differential'
 include { FLAGSTAT ; FASTQC ; NANOPLOT ; NANOCOMP } from './modules/qc'
 include { RETRIEVE_FILE; REMOVE_FILE } from './modules/caller/fs'
+include { MAKOVIEW_INIT; MAKOVIEW_CREATE_LAUNCH_SCRIPT } from './modules/makoview'
 
 // SCHEMA VALIDATION
 include { validateParameters ; paramsSummaryLog ; paramsHelp } from 'plugin/nf-schema'
@@ -141,5 +142,16 @@ docs:   https://shimlab.github.io/mako
         .groupTuple()
         .map { it -> [it[0][0], it[0][1], it[1]] }
 
-    FDR_CORRECTION(diff_ch)
+    completed_ch = FDR_CORRECTION(diff_ch).collect()
+
+    // initialise Makoview index
+    makoview_init_results_ch = MAKOVIEW_INIT(file(params.gtf), file(params.genome))
+
+    MAKOVIEW_CREATE_LAUNCH_SCRIPT(
+        makoview_init_results_ch.gtf_file,
+        makoview_init_results_ch.genome_file,
+        completed_ch
+    )
+
 }
+

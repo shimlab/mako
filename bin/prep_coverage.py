@@ -6,63 +6,49 @@ import sys
 import duckdb
 import pandas as pd
 import pysam
+from collections import Counter
 from datetime import datetime
-
-BATCH_SIZE = 75000
 
 
 def main(args):
     conn = duckdb.connect(args.dorado_db)
     conn.execute("""
         CREATE TABLE coverage (
-            read_id VARCHAR,
             transcript_id VARCHAR,
-            sample VARCHAR
+            sample VARCHAR,
+            "group" VARCHAR,
+            count BIGINT
         )
     """)
+
+    counts = Counter()
 
     with open(args.samplesheet) as f:
         for row in csv.DictReader(f):
             if not row['path_dorado']:
                 continue
             sample_name = row['name']
+            group = row['group']
             bam_path = row['path_dorado']
 
             print(f"{datetime.now()} Processing {bam_path} (sample: {sample_name})", file=sys.stderr)
             sys.stderr.flush()
 
-            batch = []
             with pysam.AlignmentFile(bam_path, 'rb') as bam:
                 for read in bam:
                     if read.is_secondary or read.is_supplementary or read.is_unmapped:
                         continue
-                    batch.append({
-                        'read_id': read.query_name,
-                        'chrom':   read.reference_name,
-                        'sample':  sample_name,
-                    })
-                    if len(batch) >= BATCH_SIZE:
-                        _flush(conn, batch)
-                        batch = []
+                    transcript_id = read.reference_name.partition('|')[0].partition(' ')[0]
+                    counts[(transcript_id, sample_name, group)] += 1
 
-            if batch:
-                _flush(conn, batch)
-
+    df = pd.DataFrame(
+        [(t, s, g, c) for (t, s, g), c in counts.items()],
+        columns=['transcript_id', 'sample', 'group', 'count']
+    )
+    conn.register('_counts', df)
+    conn.execute('INSERT INTO coverage SELECT transcript_id, sample, "group", count FROM _counts')
     conn.close()
     print(f"{datetime.now()} Done: {args.dorado_db}", file=sys.stderr)
-
-
-def _flush(conn, batch):
-    df = pd.DataFrame(batch)
-    conn.register('_batch', df)
-    conn.execute("""
-        INSERT INTO coverage
-        SELECT
-            read_id,
-            regexp_extract(chrom, '^[^| ]+') AS transcript_id,
-            sample
-        FROM _batch
-    """)
 
 
 if __name__ == '__main__':
