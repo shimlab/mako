@@ -1,7 +1,5 @@
 ---
 title: Output
-layout: default
-nav_order: 5
 ---
 
 This page describes the output files and folder structure of Mako.

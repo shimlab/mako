@@ -1,8 +1,4 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/jekyll",
-  "features": {
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "latest"
-    }
-  }
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "postCreateCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh"
 }

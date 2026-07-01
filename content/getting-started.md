@@ -1,10 +1,6 @@
 ---
 title: Getting Started
-layout: default
-nav_order: 2
 ---
-
-## Quick start
 
 You will need:
 
@@ -51,11 +47,11 @@ nextflow run main.nf \
     --gtf <annotation.gtf>
 ```
 
-{: .highlight }
-Configuration settings can be found in [Configuration](configuration).
+!!! tip
+    Configuration settings can be found in [Configuration](configuration.md).
 
-{: .note }
-If your institution has an [nf-core configuration](https://nf-co.re/configs/) available, you can access it through `-profile` i.e. `-profile wehi` to use the WEHI Milton HPC. See [Execution Profiles](deployment#execution-profiles) for more.
+!!! note
+    If your institution has an [nf-core configuration](https://nf-co.re/configs/) available, you can access it through `-profile` i.e. `-profile wehi` to use the WEHI Milton HPC. See [Execution Profiles](deployment.md#execution-profiles) for more.
 
 ## Running makoview
 
@@ -71,4 +67,4 @@ uvx makoview \
   --port 8000
 ```
 
-See [makoview](makoview) for more information on alternative installation methods for Makoview and remote forwarding.
+See [makoview](makoview.md) for more information on alternative installation methods for Makoview and remote forwarding.

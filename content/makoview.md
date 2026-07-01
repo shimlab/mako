@@ -1,7 +1,5 @@
 ---
 title: makoview
-layout: default
-nav_order: 6
 ---
 
 Mako comes with an interactive application called **_makoview_** which can be used to visualise the results once the pipeline has finished.

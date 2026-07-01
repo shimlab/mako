@@ -1,0 +1,54 @@
+site_name: Mako
+site_description: Mako is a pipeline for differential RNA modification calling using Nanopore direct RNA sequencing data
+repo_url: https://github.com/shimlab/mako
+repo_name: shimlab/mako
+edit_uri: ""
+
+theme:
+  name: material
+  features:
+    - search.highlight
+    - content.code.copy
+    - navigation.top
+    - navigation.tabs
+    - navigation.tabs.sticky
+  font:
+    text: Fira Sans
+  palette:
+    scheme: default
+    primary: custom
+
+watch:
+  - content
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - footnotes
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - attr_list
+  - pymdownx.snippets:
+      base_path:
+        - content
+      check_paths: true
+
+docs_dir: content
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Configuration: configuration.md
+  - Output: output.md
+  - Deployment: deployment.md
+  - Makoview: makoview.md

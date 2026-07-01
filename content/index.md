@@ -1,10 +1,6 @@
 ---
 title: Home
-layout: home
-nav_order: 1
 ---
-
-## Introduction
 
 Mako is a bioinformatics pipeline designed for the differential analysis of RNA modifications between two groups using Oxford Nanopore Technologies (ONT) direct RNA sequencing data (RNA002 or RNA004). It takes a samplesheet and POD5 files as input, performs basecalling and alignment, and then applies various statistical methods to identify differentially modified sites between experimental conditions.
 
@@ -12,11 +8,11 @@ If you already have pre-basecalled data or m6Anet results, you can skip the base
 
 The software is written in Nextflow and utilises Docker/Singularity containerisation for reproducibility and ease of installation.
 
-{: .highlight }
-**See [Getting Started](getting-started) for instructions on how to install and run the pipeline.**
+!!! tip
+    See [Getting Started](getting-started.md) for instructions on how to install and run the pipeline.
 
-{: .note }
-**mako** is in active development and not all features are supported. See [Configuration](configuration) for a list of what features are in-progress.
+!!! note
+    **mako** is in active development and not all features are supported. See [Configuration](configuration.md) for a list of what features are in-progress.
 
 ---
 

@@ -1,0 +1,9 @@
+[project]
+name = "mako-docs"
+version = "0.1.0"
+description = "Documentation for mako, a pipeline for differential RNA modification calling using Nanopore direct RNA sequencing data"
+requires-python = ">=3.11"
+dependencies = [
+    "mkdocs==1.6.1",
+    "mkdocs-material==9.6.23",
+]

@@ -1,25 +1,19 @@
 ---
 title: Configuration
-layout: default
-nav_order: 3
 ---
 
-<blockquote class="note">
-<strong>mako</strong> is in active development and not all features are supported yet. Key features that need to be implemented:
+!!! warning "Work in progress"
+    **mako** is in active development and not all features are supported yet. Key features that need to be implemented:
 
-<ul>
-<li>Certain QC visualisations, such as the metagene plot</li>
-<li>Transcriptome to genome mapping</li>
-<li>Post-differential expression calling visualisation</li>
-</ul>
+    - Certain QC visualisations, such as the metagene plot
+    - Transcriptome to genome mapping
+    - Post-differential expression calling visualisation
 
-Bug reports are highly welcome and we would greatly appreciate they be sent to our <a href="https://github.com/shimlab/mako/issues">GitHub Issues tracker</a>.
-
-</blockquote>
+    Bug reports are highly welcome and we would greatly appreciate they be sent to our [GitHub Issues tracker](https://github.com/shimlab/mako/issues).
 
 ## Parameters
 
-{% include parameters.html %}
+--8<-- "includes/parameters.html"
 
 ## Samplesheet
 

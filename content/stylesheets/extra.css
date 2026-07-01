@@ -1,0 +1,28 @@
+.md-source__facts {
+  display: none;
+}
+
+:root>* {
+  --md-primary-fg-color: #0b2e65;
+}
+
+html {
+  font-size: 22px;
+}
+
+.md-content a {
+  text-decoration: underline;
+}
+
+.md-content a::after {
+  content: "\00a0↗"
+}
+
+.md-content :is(h1, h2, h3) {
+  font-weight: 500;
+  color: black;
+}
+
+code {
+  color: black !important;
+}
