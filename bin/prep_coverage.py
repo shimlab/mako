@@ -11,7 +11,7 @@ from datetime import datetime
 
 
 def main(args):
-    conn = duckdb.connect(args.dorado_db)
+    conn = duckdb.connect(args.output_db)
     conn.execute("""
         CREATE TABLE coverage (
             transcript_id VARCHAR,
@@ -22,14 +22,15 @@ def main(args):
     """)
 
     counts = Counter()
+    path_col = 'path_modbam' if args.input_format == 'modbam' else 'path_bam'
 
     with open(args.samplesheet) as f:
         for row in csv.DictReader(f):
-            if not row['path_dorado']:
+            if not row[path_col]:
                 continue
             sample_name = row['name']
             group = row['group']
-            bam_path = row['path_dorado']
+            bam_path = row[path_col]
 
             print(f"{datetime.now()} Processing {bam_path} (sample: {sample_name})", file=sys.stderr)
             sys.stderr.flush()
@@ -48,11 +49,13 @@ def main(args):
     conn.register('_counts', df)
     conn.execute('INSERT INTO coverage SELECT transcript_id, sample, "group", count FROM _counts')
     conn.close()
-    print(f"{datetime.now()} Done: {args.dorado_db}", file=sys.stderr)
+    print(f"{datetime.now()} Done: {args.output_db}", file=sys.stderr)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--samplesheet', required=True, help='Pipeline samplesheet CSV')
-    parser.add_argument('--dorado_db',    required=True, help='Output DuckDB path for Dorado')
+    parser.add_argument('--input-format', required=True, choices=['modbam', 'table'],
+                         help='Which samplesheet column holds the BAM path')
+    parser.add_argument('--output-db', required=True, help='Output DuckDB path for coverage')
     main(parser.parse_args())

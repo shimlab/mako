@@ -1,7 +1,7 @@
-name,group,path_dorado,path_m6anet
-mar_1_cn,cn,/data/mar_1_cn.bam,/data/mar_1_cn/data.indiv_proba.csv
-mar_1_cb,cb,/data/mar_1_cb.bam,/data/mar_1_cb/data.indiv_proba.csv
-mar_2_cn,cn,/data/mar_2_cn.bam,/data/mar_2_cn/data.indiv_proba.csv
-mar_2_cb,cb,/data/mar_2_cb.bam,/data/mar_2_cb/data.indiv_proba.csv
-mar_3_cn,cn,/data/mar_3_cn.bam,/data/mar_3_cn/data.indiv_proba.csv
-mar_3_cb,cb,/data/mar_3_cb.bam,/data/mar_3_cb/data.indiv_proba.csv
+name,group,path_modbam
+mar_1_cn,cn,/data/mar_1_cn.bam
+mar_1_cb,cb,/data/mar_1_cb.bam
+mar_2_cn,cn,/data/mar_2_cn.bam
+mar_2_cb,cb,/data/mar_2_cb.bam
+mar_3_cn,cn,/data/mar_3_cn.bam
+mar_3_cb,cb,/data/mar_3_cb.bam

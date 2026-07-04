@@ -44,7 +44,12 @@ process MAKOVIEW_INIT {
     """
 
     stub:
+    relative_gtf_file = "ref/${gtf.name}"
+    relative_genome_file = "ref/${genome.name}"
+
     """
+    mkdir makoview_venv
+    touch makoview_venv/stub.txt
     """
 }
 
@@ -62,7 +67,6 @@ process MAKOVIEW_CREATE_LAUNCH_SCRIPT {
     output:
     path "launch_makoview.sh"
 
-    // TODO: change paths to reflect new directory structure
     script:
     """
     SCRIPT_CONTENTS=\$(cat << 'EOF'
@@ -74,8 +78,8 @@ process MAKOVIEW_CREATE_LAUNCH_SCRIPT {
     source makoview_venv/bin/activate
 
     # select the correct fits TSV file
-    files=(../differential/dorado/*.tsv)
-    
+    files=(../differential/*.tsv)
+
     if [ \${#files[@]} -eq 1 ]; then
         FITS_TSV="\${files[0]}"
     else
@@ -92,9 +96,9 @@ process MAKOVIEW_CREATE_LAUNCH_SCRIPT {
     makoview serve \\
         --genome ${genome_file} \\
         --gtf ${gtf_file} \\
-        --sites ../differential/dorado/sites.duckdb \\
-        --coverage ../db/coverage.dorado.duckdb \\
-        --reads ../modcall/dorado/all_sites.duckdb \\
+        --sites ../differential/sites.duckdb \\
+        --coverage ../db/coverage.duckdb \\
+        --reads ../db/all_sites.duckdb \\
         --fits \$FITS_TSV \\
         --port 52348
     EOF

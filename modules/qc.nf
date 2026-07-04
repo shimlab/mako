@@ -115,7 +115,7 @@ process VISUALIZE_FINAL_OUTPUT {
             'community.wave.seqera.io/library/quarto_pip_duckdb_jupyter_pruned:ad77b3a24bf721f0' }"
 
     input:
-    tuple val(differential_model), val(mod_caller), path("all_sites.duckdb"), path("model_results.tsv")
+    tuple path("all_sites.duckdb"), path("model_results.tsv")
     
     script:
     """

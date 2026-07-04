@@ -16,7 +16,7 @@ Description: Script to load and prepare read-level RNA modification probabilitie
 """
 
 
-def dorado_data_prep(file_info_list, args):
+def modbam_data_prep(file_info_list, args):
     """
     Load data from TSV files into a DuckDB database using UNION ALL approach.
     Args:
@@ -71,7 +71,7 @@ def dorado_data_prep(file_info_list, args):
 
 
 
-def m6anet_data_prep(csv_file, args):
+def table_data_prep(csv_file, args):
     """
     Load data from a CSV file into a SQLite database for efficient filtering and create a summary table of the sites.
     Args:
@@ -136,8 +136,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--method",
-        choices=["dorado", "m6anet"],
-        help="Method used for modification calling.",
+        choices=["modbam", "table"],
+        help="Format of the input modification-calling data.",
     )
     parser.add_argument(
         "--threads",
@@ -173,8 +173,8 @@ if __name__ == "__main__":
         args.probability_bound_upper = 0
 
     file_info_list = pd.read_csv(args.input, header=0).to_dict(orient="records")
-    if args.method.lower() == "dorado":
-        dorado_data_prep(file_info_list, args)
+    if args.method.lower() == "modbam":
+        modbam_data_prep(file_info_list, args)
 
-    elif args.method.lower() == "m6anet":
-        m6anet_data_prep(file_info_list, args)
+    elif args.method.lower() == "table":
+        table_data_prep(file_info_list, args)

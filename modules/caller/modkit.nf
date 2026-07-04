@@ -1,7 +1,7 @@
 process MODKIT_PILEUP {
     tag "${sample_name}"
     label 'high_cpu'
-    publishDir "${params.outdir}/modcall/dorado/${sample_name}", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/modcall/${sample_name}", mode: params.publish_dir_mode
 
     input:
     tuple val(sample_name), val(group), path("sorted.bam"), path("sorted.bam.bai")
@@ -36,7 +36,7 @@ process MODKIT_PILEUP {
 process MODKIT_EXTRACT {
     tag "${sample_name}"
     label 'high_cpu'
-    publishDir "${params.outdir}/modcall/dorado/${sample_name}", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/modcall/${sample_name}", mode: params.publish_dir_mode
 
     input:
     tuple val(sample_name), val(group), path("sorted.bam"), path("sorted.bam.bai")

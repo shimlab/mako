@@ -1,25 +1,26 @@
-// TODO: remove val(mod_caller)... it is obvious by virtue that the process is called PREP_FROM_DORADO
-process PREP_FROM_DORADO {
+// NOTE: data_prep.py's own --method flag (modbam/table) refers to the *input data format*,
+// unrelated to the Nextflow-level params.method (the statistical differential-calling model).
+process PREP_FROM_MODBAM {
     label 'high_cpu'
-    publishDir "${params.outdir}/db/${mod_caller}", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/db", mode: params.publish_dir_mode
 
     input:
-    tuple val(mod_caller), path("aggregated_results.csv")
+    path("aggregated_results.csv")
     path 'files'
 
     output:
-    tuple val(mod_caller), path("all_sites.duckdb")
+    path("all_sites.duckdb")
 
     script:
     """
-    # Prepare data from Dorado output for differential analysis
+    # Prepare data from modbam output for differential analysis
     data_prep.py \\
         --input aggregated_results.csv \\
-        --method dorado \\
+        --method modbam \\
         --batch-size 75000 \\
         --threads '${task.cpus}' \\
-        --probability-bound '${params.mod_filter_dorado}' \\
-        --database all_sites.duckdb 
+        --probability-bound '${params.mod_filter}' \\
+        --database all_sites.duckdb
     """
 
     stub:
@@ -28,27 +29,27 @@ process PREP_FROM_DORADO {
     """
 }
 
-process PREP_FROM_M6ANET {
+process PREP_FROM_TABLE {
     label 'low_cpu'
-    tag "m6anet"
+    publishDir "${params.outdir}/db", mode: params.publish_dir_mode
 
     input:
-    tuple val(mod_caller), path("aggregated_results.csv")
+    path("aggregated_results.csv")
     path 'files'
 
     output:
-    tuple val(mod_caller), path("all_sites.duckdb")
+    path("all_sites.duckdb")
 
     script:
     """
-    # Prepare data from m6Anet output for differential analysis
+    # Prepare data from table output for differential analysis
     data_prep.py \\
         --input aggregated_results.csv \\
-        --method m6anet \\
+        --method table \\
         --batch-size 75000 \\
         --threads '${task.cpus}' \\
-        --probability-bound '${params.mod_filter_m6anet}' \\
-        --database all_sites.duckdb 
+        --probability-bound '${params.mod_filter}' \\
+        --database all_sites.duckdb
     """
 
     stub:
@@ -59,14 +60,14 @@ process PREP_FROM_M6ANET {
 
 process SITE_SELECTION {
     label 'low_cpu'
-    publishDir "${params.outdir}/differential/${mod_caller}", mode: params.publish_dir_mode
+    publishDir "${params.outdir}/differential", mode: params.publish_dir_mode
 
     input:
-    tuple val(mod_caller), path(database)
+    path(database)
     path(gtf)
 
     output:
-    tuple val(mod_caller), path("sites.duckdb"), path("segments.csv")
+    tuple path("sites.duckdb"), path("segments.csv")
 
     script:
     """

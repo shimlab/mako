@@ -10,7 +10,7 @@
       "type": "object",
       "fa_icon": "fas fa-terminal",
       "description": "Define where the pipeline should find input data and save output data.",
-      "required": ["dataset_name", "samplesheet", "outdir"],
+      "required": ["dataset_name", "samplesheet", "outdir", "input_format"],
       "properties": {
         "dataset_name": {
           "type": "string",
@@ -32,6 +32,11 @@
           "default": "copy",
           "enum": ["copy", "symlink"],
           "description": "How to copy output from the work directory to the output directory"
+        },
+        "input_format": {
+          "type": "string",
+          "enum": ["modbam", "table"],
+          "description": "Whether the input format is 'modBAM' or table (TSV) form."
         }
       }
     },
@@ -41,18 +46,6 @@
       "description": "",
       "default": "",
       "properties": {
-        "differential_model": {
-          "type": "string",
-          "default": "adaptive_binomial",
-          "description": "Model to use to call differentially modified sites, as a comma-separated list. Options: adaptive_binomial, homo_norm, hetero_norm, binomial, beta_binomial",
-          "enum": [
-            "adaptive_binomial",
-            "homo_norm",
-            "hetero_norm",
-            "binomial",
-            "beta_binomial"
-          ]
-        },
         "genome": {
           "type": "string",
           "description": "Reference genome, in .fasta format"
@@ -66,7 +59,7 @@
           "description": "GTF annotation file"
         }
       },
-      "required": ["differential_model", "transcriptome", "gtf", "genome"]
+      "required": ["genome", "transcriptome", "gtf"]
     },
     "modification_calling_parameters": {
       "title": "Modification calling parameters",
@@ -74,37 +67,31 @@
       "description": "Settings which control which sites are selected for differential calling.",
       "default": "",
       "properties": {
-        "min_reads_per_sample": {
-          "type": "integer",
-          "default": 5,
-          "description": "How many reads each sample should have at a site in order for the site to be considered."
+        "method": {
+          "type": "string",
+          "default": "adaptive_binomial",
+          "enum": ["adaptive_binomial", "binomial", "beta_binomial"],
+          "description": "Model to use to call differentially modified sites"
         },
-        "mod_threshold_dorado": {
+        "mod_threshold": {
           "type": "number",
-          "description": "A passing threshold to use with Dorado data to determine a base modification.",
+          "description": "A passing threshold to determine a base modification.",
+          "minimum": 0,
+          "maximum": 1,
           "default": 0.5
         },
-        "mod_filter_dorado": {
+        "mod_filter": {
           "type": "string",
           "description": "Reads with a modification probability within this interval will be filtered out and not used in the Dorado model. The format should be `a,b` i.e. `0.2,0.8`. By default, no filtering is done.",
           "pattern": "^0\\.\\d+,0\\.\\d+$"
         },
-        "mod_threshold_m6anet": {
-          "type": "number",
-          "description": "A passing threshold to use with m6Anet data to determine a base modification.",
-          "default": 0.033379376
-        },
-        "mod_filter_m6anet": {
-          "type": "string",
-          "description": "Reads with a modification probability within this interval will be filtered out and not used in the m6Anet model. The format should be `a,b` i.e. `0.2,0.8`. By default, no filtering is done.",
-          "pattern": "^0\\.\\d+,0\\.\\d+$"
+        "min_reads_per_sample": {
+          "type": "integer",
+          "default": 5,
+          "description": "How many reads each sample should have at a site in order for the site to be considered."
         }
       },
-      "required": [
-        "min_reads_per_sample",
-        "mod_threshold_dorado",
-        "mod_threshold_m6anet"
-      ]
+      "required": ["mod_threshold"]
     }
   },
   "allOf": [
