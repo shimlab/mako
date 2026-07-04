@@ -1,5 +1,7 @@
 ---
-title: Configuration
+title: Usage
+hide:
+  - navigation
 ---
 
 !!! warning "Work in progress"

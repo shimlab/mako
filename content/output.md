@@ -1,5 +1,7 @@
 ---
 title: Output
+hide:
+  - navigation
 ---
 
 This page describes the output files and folder structure of Mako.

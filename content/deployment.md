@@ -1,5 +1,7 @@
 ---
 title: Deployment
+hide:
+  - navigation
 ---
 
 Mako is a Nextflow pipeline intended to be deployed on high performance computing (HPC) systems. For supported scheduler systems, see the [Nextflow documentation (Executors)](https://www.nextflow.io/docs/latest/executor.html). The pipeline was tested to work with the [SLURM workload manager](https://slurm.schedmd.com/overview.html).
