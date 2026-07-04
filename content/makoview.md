@@ -2,11 +2,35 @@
 title: makoview
 ---
 
-Mako comes with an interactive application called **_makoview_** which can be used to visualise the results once the pipeline has finished.
+Mako comes with an interactive application called **_makoview_** which can be used to visualise the results once the pipeline has finished. You can see an interactive demo of Makoview here: [https://shimlab.github.io/makoview/gene](https://shimlab.github.io/makoview/gene).
 
 ![makoview screenshot](./assets/makoview.png)
 
-## Installation
+## Install
+Makoview is automatically installed by the Mako pipeline into a virtual environment. Once the execution has completed, run:
+```sh
+$ <results_dir>/makoview/launch_makoview.sh
+```
+
+## Running on HPC
+
+On HPC systems, if you have SSH access, you can port forward the web server from the server to your local machine.
+
+```bash
+# launch the server on port within [10000, 65535], i.e.
+🛜 SERVER $ makoview <params> --port <abcde>
+
+# next, on your local machine, forward that port:
+👩‍💻 CLIENT $ ssh -N -L <abcde>:localhost:<abcde> username@hpc.server
+```
+
+You can now connect to Makoview locally using `http://127.0.0.1:<abcde>`.
+
+
+### Manual installation and usage
+
+!!! warning
+    Makoview depends on the output produced by Mako and is automatically installed by the Mako pipeline into a virtual environment. Run Makoview manually at your own risk!
 
 makoview is a Python package for Python 3.9 — 3.12.12, available on PyPI and downloadable through your preferred Python package manager.
 
@@ -23,8 +47,6 @@ $ uvx makoview --help        # or uvx --python 3.12 makoview --help
 ```
 
 [`pipx`](https://github.com/pypa/pipx) and [`uv`](https://docs.astral.sh/uv/) allow executables to be run within their own isolated environment, preventing dependency resolution issues. They are recommended over `pip install`.
-
-## Usage
 
 Makoview has three parameters:
 
@@ -51,17 +73,3 @@ makoview \
 ```
 
 This will launch a web server running on port `8000`, accessible at [http://127.0.0.1:8000](http://127.0.0.1:8000).
-
-### Running on HPC
-
-On HPC systems, if you have SSH access, you can port forward the web server from the server to your local machine.
-
-```bash
-# launch the server on port within [10000, 65535], i.e.
-🛜 SERVER $ makoview <params> --port <abcde>
-
-# next, on your local machine, forward that port:
-👩‍💻 CLIENT $ ssh -N -L <abcde>:localhost:<abcde> username@hpc.server
-```
-
-You can now connect to Makoview locally using `http://127.0.0.1:<abcde>`.

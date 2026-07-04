@@ -28,11 +28,11 @@ To run this pipeline, it is strongly recommended to use Docker or Singularity/Ap
 If you are unable to use containers through Nextflow (strongly recommended), we release images with almost all dependencies bundled on GitHub Packages for:
 
 - Docker: [`ghcr.io/olliecheng/mako_main_docker`](https://github.com/users/olliecheng/packages/container/package/mako_main_docker)
-- Singularity/Apptainer: [`ghcr.io/olliecheng/mako_main_singularity`](https://github.com/users/olliecheng/packages/container/package/mako_main_singularity)  
+- Singularity/Apptainer: [`oras://ghcr.io/olliecheng/mako_main_singularity`](https://github.com/users/olliecheng/packages/container/package/mako_main_singularity)  
   This is an ORAS endpoint, so Singularity can pull without first needing to convert from Docker images, which can take a long time. Do not use this image with Docker, it will fail.
 
 If you are using these images manually, make sure to use a tagged version, as each version is tagged alongside the Mako build commit that it supports.
 
 ### Containerless deployment
 
-To install the dependencies manually, you can install necessary software using [the Dockerfile and build scripts](https://github.com/shimlab/mako/tree/main/image) as a guide. See `install_R_dependencies.R` and `requirements.txt` for R and Python dependencies respectively.
+To install the dependencies manually, you can install necessary software using [the Dockerfile and build scripts](https://github.com/shimlab/mako/tree/main/image) as a guide. See `install_R_dependencies.R` and `requirements.txt` for R and Python dependencies respectively. This approach is not officially supported, as we cannot guarantee dependencies will be installed correctly on your machine.

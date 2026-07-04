@@ -9,10 +9,7 @@ If you already have pre-basecalled data or m6Anet results, you can skip the base
 The software is written in Nextflow and utilises Docker/Singularity containerisation for reproducibility and ease of installation.
 
 !!! tip
-    See [Getting Started](getting-started.md) for instructions on how to install and run the pipeline.
-
-!!! note
-    **mako** is in active development and not all features are supported. See [Configuration](configuration.md) for a list of what features are in-progress.
+    See [Configuration](configuration.md) for instructions on how to install and run the pipeline.
 
 ---
 

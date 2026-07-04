@@ -9,6 +9,28 @@ title: Configuration
 
     Bug reports are highly welcome and we would greatly appreciate they be sent to our [GitHub Issues tracker](https://github.com/shimlab/mako/issues).
 
+## Installation
+
+You will need:
+
+- Nextflow
+- Docker **or** Singularity (Apptainer)
+- System Python version >= 3.9 with pip installed
+- Reference genome and transcriptome
+- Pre-modification-called data from Dorado or m<sup>6</sup>Anet, either in modBAM file or as a table of modification calls
+
+```bash title="bash: check dependencies and install Mako"
+# load nextflow, docker/singularity modules as needed
+modules load nextflow apptainer
+
+# check Python version is sufficient and pip exists
+python3 -c "import sys,pip; sys.exit(sys.version_info<(3,9))" && echo "Python OK" || echo "Python FAIL"
+
+# download the pipeline
+git clone https://github.com/shimlab/mako.git && cd mako
+nextflow run main.nf --help
+```
+
 
 ## Samplesheet
 
@@ -33,8 +55,9 @@ The samplesheet is a CSV file which contains information about the samples to be
     The file should be a .bam file in 'modbam' format i.e. with tags `MM` and `ML`. See the [Dorado documentation](https://software-docs.nanoporetech.com/dorado/latest/basecaller/mods/) for more information.
 
     Start Mako:
-    ```sh
+    ```bash title="bash"
     $ nextflow run main.nf \
+        -profile singularity \
         --samplesheet samplesheet.csv \
         --input_format modbam \
         --mod_threshold 0.5
@@ -60,8 +83,9 @@ The samplesheet is a CSV file which contains information about the samples to be
       If using m6Anet, this file is `data.indiv_proba.csv`. The file must have columns `transcript_id, transcript_position, read_index, probability_modified`.
 
     Start Mako:
-    ```sh
+    ```bash title="bash"
     $ nextflow run main.nf \
+        -profile singularity \
         --samplesheet samplesheet.csv \
         --input_format table \
         --mod_threshold 0.033379376
@@ -74,5 +98,10 @@ Two groups should be provided to call differential modifications between conditi
 
 
 ## Parameters
+
+!!! note
+    If your institution has an [nf-core configuration](https://nf-co.re/configs/) available, you can access it through `-profile` i.e. `-profile wehi` to use the WEHI Milton HPC. See [Execution Profiles](deployment.md#execution-profiles) for more.
+
+    Dependencies for Mako are distributed as container images for Docker and Singularity (Apptainer). If not using an nf-core configuration, run Mako using `-profile docker` or `-profile singularity`.
 
 --8<-- "includes/parameters.html"

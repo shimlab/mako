@@ -49,7 +49,6 @@ docs_dir: content
 
 nav:
   - Home: index.md
-  - Getting Started: getting-started.md
   - Configuration: configuration.md
   - Output: output.md
   - Deployment: deployment.md
