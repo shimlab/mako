@@ -39,18 +39,18 @@ process FDR_CORRECTION {
     path("segment*.parquet")
 
     output:
-    path("fits.tsv")
+    path("model_calls.tsv")
 
     script:
     """
     fdr_correction.py  \
         --alpha 0.05 \
-        --output fits.tsv \
+        --output model_calls.tsv \
         segment*.parquet
     """
 
     stub:
     """
-    echo "test" > fits.tsv
+    echo "test" > model_calls.tsv
     """
 }

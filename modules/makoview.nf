@@ -77,30 +77,14 @@ process MAKOVIEW_CREATE_LAUNCH_SCRIPT {
 
     source makoview_venv/bin/activate
 
-    # select the correct fits TSV file
-    files=(../differential/*.tsv)
-
-    if [ \${#files[@]} -eq 1 ]; then
-        FITS_TSV="\${files[0]}"
-    else
-        PS3="Select a result: "
-        select FITS_TSV in "\${files[@]}"; do
-            if [ -n "\${FITS_TSV:-}" ]; then
-                break
-            else
-                echo "Invalid selection, try again." >&2
-            fi
-        done
-    fi
-
     makoview serve \\
-        --genome ${genome_file} \\
-        --gtf ${gtf_file} \\
-        --sites ../differential/sites.duckdb \\
+        --genome   ${genome_file} \\
+        --gtf      ${gtf_file} \\
+        --sites    ../differential/sites.duckdb \\
         --coverage ../db/coverage.duckdb \\
-        --reads ../db/all_sites.duckdb \\
-        --fits \$FITS_TSV \\
-        --port 52348
+        --reads    ../db/reads.duckdb \\
+        --fits     ../differential/model_calls.tsv \\
+        --port     52348
     EOF
     )
 

@@ -9,7 +9,7 @@ process PREP_FROM_MODBAM {
     path 'files'
 
     output:
-    path("all_sites.duckdb")
+    path("reads.duckdb")
 
     script:
     """
@@ -20,12 +20,12 @@ process PREP_FROM_MODBAM {
         --batch-size 75000 \\
         --threads '${task.cpus}' \\
         --probability-bound '${params.mod_filter}' \\
-        --database all_sites.duckdb
+        --database reads.duckdb
     """
 
     stub:
     """
-    echo "all_sites.duckdb" > all_sites.duckdb
+    echo "reads.duckdb" > reads.duckdb
     """
 }
 
@@ -38,7 +38,7 @@ process PREP_FROM_TABLE {
     path 'files'
 
     output:
-    path("all_sites.duckdb")
+    path("reads.duckdb")
 
     script:
     """
@@ -49,12 +49,12 @@ process PREP_FROM_TABLE {
         --batch-size 75000 \\
         --threads '${task.cpus}' \\
         --probability-bound '${params.mod_filter}' \\
-        --database all_sites.duckdb
+        --database reads.duckdb
     """
 
     stub:
     """
-    echo "all_sites.duckdb" > all_sites.duckdb
+    echo "reads.duckdb" > reads.duckdb
     """
 }
 
