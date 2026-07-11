@@ -65,7 +65,7 @@ The samplesheet is a CSV file which contains information about the samples to be
         --mod_threshold 0.5
     ```
 
-=== "BAM + TSV input"
+=== "BAM + CSV input"
     This is suitable for modifications called by **m6Anet**.
     
     ```csv title="samplesheet.csv"
@@ -81,7 +81,7 @@ The samplesheet is a CSV file which contains information about the samples to be
     - `name`: a unique name for each sample
     - `group`: the experimental group or condition for each sample
     - `path_bam`: path to pre-basecalled and aligned reads in BAM format
-    - `path_csv`: path to a TSV table containing rows with each called modification probability.
+    - `path_csv`: path to a CSV table containing rows with each called modification probability.
       If using m6Anet, this file is `data.indiv_proba.csv`. The file must have columns `transcript_id, transcript_position, read_index, probability_modified`.
 
     Start Mako:
