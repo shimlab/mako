@@ -104,10 +104,9 @@ def table_data_prep(csv_file, args):
                 '{sample_name}' as sample_name,
                 '{group_name}' as group_name,
                 transcript_id as rname,
-                transcript_id as transcript_id,
-                transcript_position as transcript_position,
-                probability_modified as probability_modified,
-                'm6a' as modification_type,
+                regexp_extract(transcript_id, '^[^| ]+') as transcript_id,
+                transcript_position,
+                probability_modified,
                 NOT (probability_modified <= {args.probability_bound_lower} OR probability_modified >= {args.probability_bound_upper}) as ignored
             FROM read_csv('{file_path}', delim=',', header=true)
         """)

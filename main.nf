@@ -95,7 +95,6 @@ docs:   https://shimlab.github.io/mako
         NANOPLOT(sorted_bam_ch.map { v -> [v[0], v[2], v[3]] } )
         NANOCOMP(sorted_bam_ch.map { v -> v[2] }.collect(sort: true), sorted_bam_ch.map { v -> v[3] }.collect(sort: true))
 
-        MODKIT_PILEUP(sorted_bam_ch, file(params.transcriptome))
         modkit_extract_ch = MODKIT_EXTRACT(sorted_bam_ch, file(params.transcriptome))
 
         extracted_sites_ch = modkit_extract_ch
@@ -140,22 +139,22 @@ docs:   https://shimlab.github.io/mako
         NANOCOMP(sorted_bam_ch.map { v -> v[2] }.collect(sort: true), sorted_bam_ch.map { v -> v[3] }.collect(sort: true))
 
         // NOTE: no MODKIT_PILEUP/MODKIT_EXTRACT here -- table format supplies its own
-        // per-read modification calls via path_tsv, it doesn't need BAM-tag extraction.
+        // per-read modification calls via path_csv, it doesn't need BAM-tag extraction.
 
         tsv_sites_ch = samples_ch
             .collectFile(keepHeader: true, skip: 1) {
                 it ->
-                    if (!it.path_tsv) {
-                        error("Samplesheet row for sample '${it.name}' is missing required column 'path_tsv' for input_format='table'.")
+                    if (!it.path_csv) {
+                        error("Samplesheet row for sample '${it.name}' is missing required column 'path_csv' for input_format='table'.")
                     }
-                    ["extracted_sites.csv","sample_name,group,file_path\n${it.name},${it.group},${it.path_tsv}\n"]
+                    ["extracted_sites.csv","sample_name,group,file_path\n${it.name},${it.group},${it.path_csv}\n"]
             }
 
         tsv_paths_ch = samples_ch.collect { it ->
-            if (!it.path_tsv) {
-                error("Samplesheet row for sample '${it.name}' is missing required column 'path_tsv' for input_format='table'.")
+            if (!it.path_csv) {
+                error("Samplesheet row for sample '${it.name}' is missing required column 'path_csv' for input_format='table'.")
             }
-            file(it.path_tsv)
+            file(it.path_csv)
         }
         reads_ch = PREP_FROM_TABLE(tsv_sites_ch, tsv_paths_ch)
             .first() // convert to value channel
