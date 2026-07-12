@@ -87,7 +87,7 @@ def table_data_prep(csv_file, args):
     conn.execute(f"SET threads TO {args.threads};")
 
     conn.execute(
-        "CREATE TABLE reads (sample_name VARCHAR, group_name VARCHAR, rname VARCHAR, transcript_id VARCHAR, transcript_position INTEGER, probability_modified FLOAT, modification_type VARCHAR, ignored BOOLEAN);"
+        "CREATE TABLE reads (sample_name VARCHAR, group_name VARCHAR, rname VARCHAR, transcript_id VARCHAR, transcript_position INTEGER, probability_modified FLOAT, ignored BOOLEAN);"
     )
 
     for f in file_info_list:
