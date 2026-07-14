@@ -230,7 +230,8 @@ process_modification_site <- function(df, model_type="none") {
 # Function to apply statistical model to each site
 run_model <- function(df, model_type="none") {
     # if the reads are ALL modified or ALL unmodified, we can't fit a model - return NA results and drop the site
-    if (sum(df$probability_modified >= 0.5) == 0 || sum(df$probability_modified < 0.5) == 0) {
+    threshold = args$modification_threshold
+    if (sum(df$probability_modified >= threshold) == 0 || sum(df$probability_modified < threshold) == 0) {
         return(data.frame(
             estimate = NA_real_,
             std_err = NA_real_,
