@@ -18,22 +18,44 @@ $ <results_dir>/makoview/launch_makoview.sh
 
 On HPC systems, if you have SSH access, you can port forward the web server from the server to your local machine.
 
-```bash
-# launch the server on port within [10000, 65535], i.e.
-🛜 SERVER $ makoview <params> --port <abcde>
+It is recommended that you run Makoview from your HPC system's login node.
 
-# next, on your local machine, forward that port:
-👩‍💻 CLIENT $ ssh -N -L <abcde>:localhost:<abcde> username@hpc.server
+### 1. Start Makoview on HPC
+```console title="🏢 HPC shell"
+[userX@hpc-login-node]$ ./makoview/launch_makoview.sh
+
+INFO:     Started server process [18394]
+INFO:     Waiting for application startup.
+
+... abridged ...
+
+============================================================
+  Makoview is running on http://127.0.0.1:52348
+
+  Tip: advice on accessing Makoview from other devices
+       using SSH port forwarding can be found in the docs:
+       https://shimlab.github.io/mako/makoview
+============================================================
+
 ```
 
-You can now connect to Makoview locally using `http://127.0.0.1:<abcde>`.
+### 2. Port forward the HPC port
+Replace "52348" with the port that Makoview is running on. Keep this ssh process running in the background.
 
+```console title="💻 Client device"
+[userX@user-client]$ ssh -NL 52348:localhost:52348 userX@hpc-login-node
+```
+
+### 3. Open Makoview
+Visit a browser on your client device and navigate to localhost:52348, or the correct port.
 
 ### Manual installation and usage
 
 !!! warning
     Makoview depends on the output produced by Mako and is automatically installed by the Mako pipeline into a virtual environment. Run Makoview manually at your own risk!
 
+<details>
+<summary>Show details</summary>
 makoview is a Python package for Python 3.9 — 3.12.12, available on PyPI and downloadable through your preferred Python package manager.
 
 ```bash
@@ -74,4 +96,6 @@ makoview \
   --port 8000
 ```
 
-This will launch a web server running on port `8000`, accessible at [http://127.0.0.1:8000](http://127.0.0.1:8000).
+This will launch a web server running on port `8000`.
+
+</details>
