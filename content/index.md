@@ -22,9 +22,8 @@ The software is written in Nextflow and utilises Docker/Singularity containerisa
     1. Either binomial or beta-binomial, depending on the dispersion (**default**)
     2. Binomial
     3. Beta-binomial
-    4. Homoscedastic normal
-    5. Heteroscedastic normal
-4. Visualization of results via *makoview*
+4. False discovery rate correction
+5. Visualization of results via *makoview*
 
 ---
 
