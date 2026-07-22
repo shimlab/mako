@@ -63,6 +63,7 @@ The samplesheet is a CSV file which contains information about the samples to be
            REFERENCE_GTF=/ref/gencode.v50.annotation.gtf \
            OUTDIR=results
 
+    # run Mako
     nextflow run main.nf \
       -profile singularity \
       --samplesheet samplesheet.csv \
@@ -73,6 +74,9 @@ The samplesheet is a CSV file which contains information about the samples to be
       --genome $REFERENCE_GENOME \
       --transcriptome $REFERENCE_TXOME \
       --gtf $REFERENCE_GTF
+
+    # launch Makoview
+    ./$OUTDIR/makoview/launch_makoview.sh
     ```
 
 === "BAM + CSV input"
@@ -101,6 +105,7 @@ The samplesheet is a CSV file which contains information about the samples to be
            REFERENCE_GTF=/ref/gencode.v50.annotation.gtf \
            OUTDIR=results
 
+    # run Mako
     nextflow run main.nf \
         -profile singularity \
         --samplesheet samplesheet.csv \
@@ -111,6 +116,9 @@ The samplesheet is a CSV file which contains information about the samples to be
         --genome $REFERENCE_GENOME \
         --transcriptome $REFERENCE_TXOME \
         --gtf $REFERENCE_GTF
+
+    # launch Makoview
+    ./$OUTDIR/makoview/launch_makoview.sh
     ```
     !!! warning "Modification thresholds for m6Anet"
         The [m6Anet documentation](https://github.com/GoekeLab/m6anet/blob/590ec277cb48d61774f0872395099e466022e810/README.md) suggests to use 0.033379376 as the threshold for individual reads to be called as modified. Always consult your tool of choice to determine this value.
