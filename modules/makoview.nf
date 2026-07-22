@@ -25,7 +25,7 @@ process MAKOVIEW_INIT {
     python -m venv makoview_venv
     
     source makoview_venv/bin/activate
-    pip install makoview==0.2.0
+    pip install makoview==0.2.1
 
     # create symlinks to gtf and genome files
     GTF_PATH=\$(realpath "${gtf}")
@@ -84,7 +84,8 @@ process MAKOVIEW_CREATE_LAUNCH_SCRIPT {
         --coverage ../db/coverage.duckdb \\
         --reads    ../db/reads.duckdb \\
         --fits     ../differential/model_calls.tsv \\
-        --port     52348
+        --port     52348 \\
+        --modified_prob_threshold ${params.mod_threshold}
     EOF
     )
 
