@@ -19,9 +19,8 @@ Mako will also produce interactive visualisations for quality control and assess
     1. Either binomial or beta-binomial, depending on the dispersion (**default**)
     2. Binomial
     3. Beta-binomial
-    4. Homoscedastic normal
-    5. Heteroscedastic normal
-4. Visualization of results via *makoview*
+4. False discovery rate correction
+5. Visualization of results via *makoview*
 
 ![mako pipeline diagram](https://github.com/shimlab/mako/blob/main/assets/pipeline_diagram.svg)
 
@@ -31,14 +30,13 @@ Please refer to the [documentation](https://shimlab.github.io/mako/) for detaile
 
 
 ## Installation
-Read the [quick start](https://shimlab.github.io/mako/getting-started.html#quick-start). But if you're in a rush:
+Read the [Usage](https://shimlab.github.io/mako/usage/) for instructions on running Mako with both Dorado and m6Anet output.
+To download and run the pipeline:
 ``` bash
 # Clone the repository
 git clone https://github.com/shimlab/mako && cd mako
 
-# Test the pipeline
 nextflow run main.nf --help
-nextflow run main.nf -profile testing
 ```
 
 ## Citations
