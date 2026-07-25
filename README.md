@@ -1,13 +1,13 @@
 <p align="center"><img src="https://github.com/shimlab/mako/blob/main/assets/logo_with_name.png" height=128 align="center" /></p>
 
-**Differential RNA modification calling at the isoform resolution using Nanopore direct RNA sequencing**
+**Differential RNA modification analysis at the isoform resolution using Nanopore direct RNA sequencing**
 
 Docs: https://shimlab.github.io/mako
 
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A523.10.0-23aa62.svg)](https://www.nextflow.io/) [![Docker](https://img.shields.io/badge/docker-enabled-0db7ed.svg)](https://www.docker.com/) [![Singularity](https://img.shields.io/badge/singularity-enabled-1d355c.svg)](https://sylabs.io/guides/3.0/user-guide/index.html)
 
 ## Introduction
-Mako is a bioinformatics pipeline designed for differential RNA modification calling at the isoform resolution using Nanopore direct RNA sequencing. It takes a samplesheet and output from Dorado and/or m6Anet, and applies various statistical methods to identify differentially modified sites between experimental conditions.
+Mako is a bioinformatics pipeline designed for differential RNA modification analysis at the isoform resolution using Nanopore direct RNA sequencing. It takes a samplesheet and output from Dorado and/or m6Anet, and applies various statistical methods to identify differentially modified sites between experimental conditions.
 
 Mako will also produce interactive visualisations for quality control and assessment of sites through the `makoview` tool.
 
