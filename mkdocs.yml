@@ -1,5 +1,5 @@
 site_name: Mako
-site_description: Mako is a pipeline for differential RNA modification calling using Nanopore direct RNA sequencing data
+site_description: Mako is a pipeline for differential RNA modification analysis using Nanopore direct RNA sequencing data
 repo_url: https://github.com/shimlab/mako
 repo_name: shimlab/mako
 edit_uri: ""

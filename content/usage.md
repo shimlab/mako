@@ -19,7 +19,7 @@ You will need:
 - Docker **or** Singularity (Apptainer)
 - System Python version >= 3.9 with pip installed
 - Reference genome and transcriptome
-- Pre-modification-called data from Dorado or m<sup>6</sup>Anet, either in modBAM file or as a table of modification calls
+- Pre-modification-analysed data from Dorado or m<sup>6</sup>Anet, either in modBAM file or as a table of modification analyses
 
 ```bash title="bash: check dependencies and install Mako"
 # load nextflow, docker/singularity modules as needed
@@ -39,7 +39,7 @@ nextflow run main.nf --help
 The samplesheet is a CSV file which contains information about the samples to be analysed in the pipeline. **A header is required**.
 
 === "modBAM input"
-    This is suitable for modifications called by **Dorado**.
+    This is suitable for modifications analysed by **Dorado**.
     
     ```csv title="samplesheet.csv"
     name,group,path_modbam
@@ -80,7 +80,7 @@ The samplesheet is a CSV file which contains information about the samples to be
     ```
 
 === "BAM + CSV input"
-    This is suitable for modifications called by **m6Anet**.
+    This is suitable for modifications analysed by **m6Anet**.
     
     ```csv title="samplesheet.csv"
     name,group,path_bam,path_csv
@@ -95,7 +95,7 @@ The samplesheet is a CSV file which contains information about the samples to be
     - `name`: a unique name for each sample
     - `group`: the experimental group or condition for each sample
     - `path_bam`: path to pre-basecalled and aligned reads in BAM format
-    - `path_csv`: path to a CSV table containing rows with each called modification probability.
+    - `path_csv`: path to a CSV table containing rows with each analysed modification probability.
       If using m6Anet, this file is `data.indiv_proba.csv`. The file must have columns `transcript_id, transcript_position, read_index, probability_modified`.
 
     Start Mako:
@@ -124,7 +124,7 @@ The samplesheet is a CSV file which contains information about the samples to be
         The [m6Anet documentation](https://github.com/GoekeLab/m6anet/blob/590ec277cb48d61774f0872395099e466022e810/README.md) suggests to use 0.033379376 as the threshold for individual reads to be called as modified. Always consult your tool of choice to determine this value.
 
 
-Two groups should be provided to call differential modifications between conditions. Group names should be alphanumeric and without spaces. The underlying models take the first group alphabetically as the reference level, and the second group alphabetically as the treatment level.
+Two groups should be provided to identify differential modifications between conditions. Group names should be alphanumeric and without spaces. The underlying models take the first group alphabetically as the reference level, and the second group alphabetically as the treatment level.
 
 
 ## Parameters

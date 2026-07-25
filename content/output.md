@@ -28,7 +28,7 @@ ENST00000000233.10  229                  ENST00000000233.10|ENSG00000004059.11|O
 | `std_err` | Standard error of the estimate |
 | `test_statistic` | Test statistic |
 | `p_value` | Raw p-value for the test of differential modification at this site |
-| `model_type` | Statistical model used to call the site (e.g. `binomial`, `homo_norm`, `hetero_norm`, `beta_binomial`) |
+| `model_type` | Statistical model used to analyse the site (e.g. `binomial`, `homo_norm`, `hetero_norm`, `beta_binomial`) |
 | `error` | Whether the model fit failed for this site (`True`/`False`) |
 | `error_message` | Error message if `error` is `True`, otherwise typically blank/NA |
 | `bh_corrected_p_value` | Benjamini–Hochberg corrected p-value |
@@ -79,12 +79,12 @@ Per-sample basecalling and alignment QC.
 | `nanocomp/` | Cross-sample comparison (NanoComp) — read length, N50, throughput, identity, quality plots |
 
 ### `modcall/` directory
-Per-sample RNA modification calls (modkit).
+Per-sample RNA modification analyses (modkit).
 
 | File | Description |
 |---|---|
 | `pileup_{sample}.bed.gz(.tbi)` | bedMethyl pileup of per-site modification stats |
-| `modifications_{sample}.tsv.gz` | Read-level modification calls |
+| `modifications_{sample}.tsv.gz` | Read-level modification analyses |
 
 ### `db/` directory
 Aggregated databases used internally by the differential step.
@@ -99,7 +99,7 @@ Differential modification analysis outputs.
 
 | File | Description |
 |---|---|
-| `model_calls.tsv` | Final differential calls |
+| `model_calls.tsv` | Final differential analysis results |
 | `sites.duckdb` | Selected/filtered sites used for testing |
 | `segments.csv` | Genomic segments used to parallelise analysis |
 | `segments/*.parquet` | Per-segment intermediate results |
