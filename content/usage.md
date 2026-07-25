@@ -112,7 +112,7 @@ The samplesheet is a CSV file which contains information about the samples to be
         --dataset_name test_dataset \
         --outdir $OUTDIR \
         --input_format table \
-        --mod_threshold 0.033379376
+        --mod_threshold 0.033379376 \
         --genome $REFERENCE_GENOME \
         --transcriptome $REFERENCE_TXOME \
         --gtf $REFERENCE_GTF
