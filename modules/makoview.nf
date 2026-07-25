@@ -25,7 +25,7 @@ process MAKOVIEW_INIT {
     python -m venv makoview_venv
     
     source makoview_venv/bin/activate
-    pip install makoview==0.2.1
+    pip install makoview==0.2.2
 
     # create symlinks to gtf and genome files
     GTF_PATH=\$(realpath "${gtf}")
