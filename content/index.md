@@ -12,7 +12,9 @@ Mako will also produce interactive visualisations for quality control and assess
 The software is written in Nextflow and utilises Docker/Singularity containerisation for reproducibility and ease of installation.
 
 !!! tip
-    See [Usage](usage.md) for instructions on how to install and run the pipeline.
+    See [Getting Started](getting_started.md.md) for a tutorial with provided example data.
+
+    See [Installation](installation.md) and [Usage](usage.md) respectively for installing and running the pipeline.
 
 ## Steps of the pipeline
 

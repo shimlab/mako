@@ -4,7 +4,7 @@ hide:
   - navigation
 ---
 
-Mako comes with an interactive application called **_makoview_** which can be used to visualise the results once the pipeline has finished. You can see an interactive demo of Makoview here: [https://shimlab.github.io/makoview/gene](https://shimlab.github.io/makoview/gene).
+Mako comes with an interactive application called **_Makoview_** which can be used to visualise the results once the pipeline has finished. You can see an interactive demo of Makoview here: [https://shimlab.github.io/makoview/gene](https://shimlab.github.io/makoview/gene).
 
 ![makoview screenshot](./assets/makoview.png)
 
