@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import os
 import sys
 import duckdb
 import pandas as pd
@@ -30,9 +31,13 @@ def main(args):
                 continue
             sample_name = row['name']
             group = row['group']
+            # Relative paths in the samplesheet are relative to the launch directory,
+            # not the task work dir this script runs in.
             bam_path = row[path_col]
+            if not os.path.isabs(bam_path):
+                bam_path = os.path.join(args.base_dir, bam_path)
 
-            print(f"{datetime.now()} Processing {bam_path} (sample: {sample_name})", file=sys.stderr)
+            print(f"{datetime.now()} Processing {row[path_col]} -> {bam_path} (sample: {sample_name})", file=sys.stderr)
             sys.stderr.flush()
 
             with pysam.AlignmentFile(bam_path, 'rb') as bam:
@@ -57,5 +62,8 @@ if __name__ == '__main__':
     parser.add_argument('--samplesheet', required=True, help='Pipeline samplesheet CSV')
     parser.add_argument('--input-format', required=True, choices=['modbam', 'table'],
                          help='Which samplesheet column holds the BAM path')
+    parser.add_argument('--base-dir', required=True,
+                         help='Directory that relative samplesheet paths resolve against '
+                              '(the Nextflow launch dir)')
     parser.add_argument('--output-db', required=True, help='Output DuckDB path for coverage')
     main(parser.parse_args())
