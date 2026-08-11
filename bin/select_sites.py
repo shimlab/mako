@@ -100,6 +100,9 @@ def main():
     args = parser.parse_args()
 
     conn = duckdb.connect(args.out_db)
+    
+    # set memory limit to 19GB (60% of 32GB) to avoid OOM errors
+    conn.execute("SET memory_limit = '19GB';")
     initialise_db(conn, args.in_db)
 
     num_sites = select_sites(conn, args.min_reads_per_sample)

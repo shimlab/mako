@@ -8,8 +8,7 @@ nextflow.enable.dsl = 2
  */
 
 // IMPORTS
-include { SAMTOOLS_SORT_INDEX ; SAMTOOLS_FLAGSTAT } from './modules/caller/dorado'
-include { MODKIT_PILEUP ; MODKIT_EXTRACT } from './modules/caller/modkit'
+include { SAMTOOLS_SORT_INDEX ; SAMTOOLS_FLAGSTAT ; EXTRACT_MODIFICATIONS } from './modules/caller/dorado'
 include { PREP_FROM_MODBAM ; PREP_FROM_TABLE ; SITE_SELECTION } from './modules/dataprep'
 include { PREP_COVERAGE } from './modules/coverage'
 include { CALL_MODEL ; FDR_CORRECTION } from './modules/differential'
@@ -95,7 +94,7 @@ docs:   https://shimlab.github.io/mako
         NANOPLOT(sorted_bam_ch.map { v -> [v[0], v[2], v[3]] } )
         NANOCOMP(sorted_bam_ch.map { v -> v[2] }.collect(sort: true), sorted_bam_ch.map { v -> v[3] }.collect(sort: true))
 
-        modkit_extract_ch = MODKIT_EXTRACT(sorted_bam_ch, file(params.transcriptome))
+        modkit_extract_ch = EXTRACT_MODIFICATIONS(sorted_bam_ch, file(params.transcriptome))
 
         extracted_sites_ch = modkit_extract_ch
             .collectFile(keepHeader: true, skip: 1) {

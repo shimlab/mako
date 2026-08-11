@@ -46,3 +46,34 @@ process SAMTOOLS_FLAGSTAT {
     touch flagstat.txt
     """
 }
+
+process EXTRACT_MODIFICATIONS {
+    tag "${sample_name}"
+    label 'high_cpu'
+    publishDir "${params.outdir}/modcall/${sample_name}", mode: params.publish_dir_mode
+
+    input:
+    tuple val(sample_name), val(group), path("sorted.bam"), path("sorted.bam.bai")
+    path ref
+
+    output:
+    tuple val(sample_name), val(group), path("modifications_${sample_name}.tsv.gz")
+
+    script:
+    """
+    # Extract command gets read-level modification information
+    extract_from_modbam.py sorted.bam --threads ${task.cpus} > reads_unsorted.tsv
+
+    # Sort reads.tsv by column 4 (chrom), then column 3 (ref_position)
+    (head -n 1 reads_unsorted.tsv && \
+     tail -n +2 reads_unsorted.tsv | sort -k4,4 -k3,3n --parallel ${task.cpus}) | gzip > modifications_${sample_name}.tsv.gz
+
+    # delete unsorted file to save space
+    rm reads_unsorted.tsv
+    """
+
+    stub:
+    """
+    touch modifications_${sample_name}.tsv.gz
+    """
+}
