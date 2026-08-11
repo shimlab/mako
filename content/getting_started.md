@@ -71,7 +71,7 @@ H69,sclc_a,<mako_tutorial_dir>/data/H69.filtered.bam
 
     Please provide at least 32 CPU cores and 32 GB of RAM for Mako to run.
 
-    This step will likely take ~10 hours.
+    This step should finish in <10 minutes (exact runtime will depend on environment and hardware)
 
     Further performance optimisation of Mako is currently being developed
 
