@@ -49,7 +49,7 @@ process SAMTOOLS_FLAGSTAT {
 
 process EXTRACT_MODIFICATIONS {
     tag "${sample_name}"
-    label 'high_cpu'
+    label 'medium_cpu'
     publishDir "${params.outdir}/modcall/${sample_name}", mode: params.publish_dir_mode
 
     input:

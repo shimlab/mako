@@ -1,7 +1,7 @@
 // NOTE: data_prep.py's own --method flag (modbam/table) refers to the *input data format*,
 // unrelated to the Nextflow-level params.method (the statistical differential-calling model).
 process PREP_FROM_MODBAM {
-    label 'high_cpu'
+    label 'medium_cpu'
     publishDir "${params.outdir}/db", mode: params.publish_dir_mode
 
     input:
@@ -30,7 +30,7 @@ process PREP_FROM_MODBAM {
 }
 
 process PREP_FROM_TABLE {
-    label 'low_cpu'
+    label 'medium_cpu'
     publishDir "${params.outdir}/db", mode: params.publish_dir_mode
 
     input:

@@ -14,6 +14,7 @@ process PREP_COVERAGE {
     prep_coverage.py \\
         --samplesheet ${samplesheet} \\
         --input-format ${params.input_format} \\
+        --base-dir "${launchDir}" \\
         --output-db coverage.duckdb
     """
 
