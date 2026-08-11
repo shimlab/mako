@@ -69,6 +69,12 @@ H69,sclc_a,<mako_tutorial_dir>/data/H69.filtered.bam
 !!! note
     Please replace `<mako_dir>` in the following with your Mako installation directory.
 
+    Please provide at least 32 CPU cores and 32 GB of RAM for Mako to run.
+
+    This step will likely take ~10 hours.
+
+    Further performance optimisation of Mako is currently being developed
+
 ```bash title="bash"
 # Create output results directory
 mkdir -p results
