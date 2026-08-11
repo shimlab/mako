@@ -1,0 +1,7 @@
+name,group,path_modbam
+H1975,adenocarcinoma,example_data/H1975.filtered.bam
+HCC827,adenocarcinoma,example_data/HCC827.filtered.bam
+H2228,adenocarcinoma,example_data/H2228.filtered.bam
+H146,sclc_a,example_data/H146.filtered.bam
+SHP77,sclc_a,example_data/SHP77.filtered.bam
+H69,sclc_a,example_data/H69.filtered.bam
