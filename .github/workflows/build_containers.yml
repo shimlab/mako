@@ -1,12 +1,6 @@
 name: Build and Push Containers to GHCR
 
 on:
-  push:
-    branches:
-      - 'new-default-model'
-    paths:
-      - 'image/**'
-      - '.github/workflows/build_containers.yml'
   workflow_dispatch:
     inputs:
       tag:
