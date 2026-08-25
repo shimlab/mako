@@ -29,14 +29,13 @@ install.packages(c(
     "twosamples"
 ))
 
-# Bioconductor packages (use official Bioconductor repository for guaranteed version consistency)
+# Bioconductor packages (use official Bioconductor repository and force explicit core packages)
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
-BiocManager::install(c("GenomicFeatures", "txdbmaker", "DSS"), update = TRUE, ask = FALSE)
-
-# Build-time assertion: Verify DSS and all packages load cleanly before finalizing image
-library(GenomicFeatures)
-library(txdbmaker)
-library(DSS)
-cat("=== All R dependencies successfully verified! ===\n")
+BiocManager::install(
+    c("S4Vectors", "IRanges", "GenomicRanges", "SummarizedExperiment", "bsseq", "DSS", "GenomicFeatures", "txdbmaker"),
+    update = TRUE,
+    ask = FALSE,
+    force = TRUE
+)

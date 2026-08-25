@@ -54,6 +54,9 @@ RUN wget "https://github.com/nanoporetech/modkit/releases/download/v0.5.0/modkit
 COPY install_R_dependencies.R .
 RUN Rscript install_R_dependencies.R
 
+# Verify critical R packages load cleanly in a fresh isolated R session
+RUN Rscript -e "library(DSS); library(GenomicFeatures); library(txdbmaker); cat('=== R dependencies verified ===\n')"
+
 # move files to PATH
 RUN ln -s $(realpath modkit/modkit) /usr/local/bin/modkit
 
