@@ -34,6 +34,4 @@ install.packages(c(
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
-BiocManager::install("GenomicFeatures")
-BiocManager::install("txdbmaker")
-BiocManager::install("DSS")
+BiocManager::install(c("GenomicFeatures", "txdbmaker", "DSS"), update = TRUE, ask = FALSE)
