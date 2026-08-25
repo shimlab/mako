@@ -10,7 +10,6 @@ options(
         )
     )
 )
-options(BioC_mirror = "https://packagemanager.posit.co/bioconductor")
 
 install.packages(c(
     "data.table",
@@ -30,8 +29,14 @@ install.packages(c(
     "twosamples"
 ))
 
-# Bioconductor packages
+# Bioconductor packages (use official Bioconductor repository for guaranteed version consistency)
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
 BiocManager::install(c("GenomicFeatures", "txdbmaker", "DSS"), update = TRUE, ask = FALSE)
+
+# Build-time assertion: Verify DSS and all packages load cleanly before finalizing image
+library(GenomicFeatures)
+library(txdbmaker)
+library(DSS)
+cat("=== All R dependencies successfully verified! ===\n")
