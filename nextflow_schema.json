@@ -110,6 +110,16 @@
       "type": "boolean",
       "hidden": true,
       "description": "Only activated during stub runs"
+    },
+    "container_registry": {
+      "type": "string",
+      "hidden": true,
+      "description": "Container registry domain/path"
+    },
+    "container_tag": {
+      "type": "string",
+      "hidden": true,
+      "description": "Container image tag"
     }
   }
 }
