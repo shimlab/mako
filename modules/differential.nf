@@ -21,7 +21,8 @@ process CALL_MODEL {
         --end ${end}  \\
         --model ${params.method} \\
         --output segments/${start}_to_${end}.parquet \\
-        --gtf ${gtf}
+        --gtf ${gtf} \\
+        --threads ${task.cpus}
     """
 
     stub:

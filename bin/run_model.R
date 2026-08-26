@@ -61,7 +61,11 @@ beta_binomial_model <- function(df) {
     return(result)
 }
 
-dss_model <- function(counts_df) {
+dss_model <- function(counts_df, threads = NULL) {
+    if (is.null(threads) || is.na(threads) || threads <= 0L) {
+        stop("A valid positive integer for 'threads' must be specified for dss_model.")
+    }
+    
     sample_info <- unique(counts_df[, c("sample_name", "group_name")])
     
     groups <- unique(sample_info$group_name)
@@ -124,8 +128,8 @@ dss_model <- function(counts_df) {
     # if either group has only 1 sample, assume equal dispersion across groups.
     use_equal_disp <- (length(control_samples) < 2 || length(treated_samples) < 2)
     
-    # Use available CPU cores (leaving 1 core for system overhead)
-    n_cores <- max(1L, parallel::detectCores() - 1L)
+    n_cores <- as.integer(threads)
+    cat(sprintf("Running DSS DMLtest with %d core(s)...\n", n_cores))
     
     # Build BSseq object
     bsseq_data <- DSS::makeBSseqData(bsseq_list, sampleNames = all_samples)
@@ -454,6 +458,10 @@ get_args <- function() {
         make_option(c("--gtf"),
             type = "character", default = NULL,
             help = "Path to the GTF file for transcriptome to genome mapping", metavar = "character"
+        ),
+        make_option(c("--threads"),
+            type = "integer", default = NULL,
+            help = "Number of threads/CPUs to use for parallel processing", metavar = "number"
         )
     )
 
@@ -470,6 +478,11 @@ get_args <- function() {
         stop("Invalid start/end indices. Start must be >= 0 and end must be > start")
     }
 
+    if (is.null(args$threads) || is.na(args$threads) || args$threads <= 0L) {
+        print_help(parser)
+        stop("A valid positive integer for --threads is required.")
+    }
+
     cat("Parameters:\n")
     cat("  Reads database:", args$reads_database, "\n")
     cat("  Min reads per sample:", args$min_reads_per_sample, "\n")
@@ -477,6 +490,7 @@ get_args <- function() {
     cat("  Start index:", args$start, "\n")
     cat("  End index:", args$end, "\n")
     cat("  Model:", args$model, "\n")
+    cat("  Threads:", args$threads, "\n")
     cat("  Output file:", args$output, "\n\n")
     cat("  GTF file:", args$gtf, "\n\n")
 
@@ -525,7 +539,7 @@ if (args$model == "dss") {
     
     if (nrow(dss_data$sites) > 0) {
         # Run DSS on all sites in batch
-        dss_results <- dss_model(dss_data$counts)
+        dss_results <- dss_model(dss_data$counts, threads = args$threads)
         
         # Explicit fail-safe join by site_idx
         matched_output <- dss_data$sites %>%
