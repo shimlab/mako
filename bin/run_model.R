@@ -250,6 +250,64 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
     return(list(sites=sites, reads=reads))
 }
 
+fetch_dss_counts <- function(start, end, sites_db, reads_db, threshold) {
+    con <- dbConnect(duckdb(), dbdir = sites_db, read_only = TRUE)
+    dbExecute(con, sprintf("ATTACH '%s' AS all_sites (READONLY);", reads_db))
+
+    cat("  Fetching sites metadata...\n")
+    sites <- dbGetQuery(
+        con,
+        "
+        SELECT 
+            row_number() OVER (ORDER BY rname, transcript_position) AS site_idx,
+            rname, 
+            transcript_position, 
+            chr, 
+            chr_position, 
+            transcript_id 
+        FROM sites
+        WHERE selected = TRUE
+        ORDER BY rname, transcript_position
+        OFFSET ?
+        LIMIT ?
+        ",
+        list(start, end - start + 1)
+    )
+
+    cat(sprintf("  Aggregating read counts for %d sites in DuckDB SQL...\n", nrow(sites)))
+    counts <- dbGetQuery(
+        con,
+        "
+        WITH batch_sites AS (
+            SELECT 
+                row_number() OVER (ORDER BY rname, transcript_position) AS site_idx,
+                rname, 
+                transcript_position
+            FROM sites
+            WHERE selected = TRUE
+            ORDER BY rname, transcript_position
+            OFFSET ?
+            LIMIT ?
+        )
+        SELECT 
+            s.site_idx,
+            r.sample_name,
+            r.group_name,
+            SUM(CASE WHEN r.probability_modified >= ? THEN 1 ELSE 0 END) AS successes,
+            COUNT(*) AS total
+        FROM batch_sites s
+        JOIN all_sites.reads r ON r.rname = s.rname AND r.transcript_position = s.transcript_position
+        WHERE r.ignored = FALSE
+        GROUP BY s.site_idx, r.sample_name, r.group_name
+        ORDER BY s.site_idx, r.sample_name
+        ",
+        list(start, end - start + 1, threshold)
+    )
+
+    dbDisconnect(con)
+    return(list(sites = sites, counts = counts))
+}
+
 # ==============================
 # Model application
 # ==============================
@@ -462,37 +520,15 @@ start_time <- Sys.time()
 if (args$model == "dss") {
     cat(sprintf("Processing batch (all %d sites) with DSS...\n", n_rows))
     
-    # Fetch all sites and reads for the full batch
-    batch_data <- fetch_dataframe(args$start, args$end, args$sites_database, args$reads_database)
+    # Fetch sites and aggregated sample counts directly from DuckDB SQL
+    dss_data <- fetch_dss_counts(args$start, args$end, args$sites_database, args$reads_database, args$modification_threshold)
     
-    if (nrow(batch_data$sites) > 0) {
-        threshold <- args$modification_threshold
-        
-        # Join reads with site indices (1:N_sites in batch)
-        sites_indexed <- batch_data$sites %>%
-            dplyr::mutate(site_idx = seq_len(nrow(batch_data$sites)))
-        
-        reads_filtered <- batch_data$reads %>%
-            dplyr::filter(ignored == FALSE)
-        
-        # Aggregate raw reads into sample counts (NO added pseudocounts for DSS)
-        counts_summary <- reads_filtered %>%
-            dplyr::inner_join(
-                sites_indexed %>% dplyr::select(rname, transcript_position, site_idx),
-                by = c("rname", "transcript_position")
-            ) %>%
-            dplyr::group_by(site_idx, sample_name, group_name) %>%
-            dplyr::summarise(
-                successes = sum(probability_modified >= threshold),
-                total     = n(),
-                .groups   = "drop"
-            )
-        
+    if (nrow(dss_data$sites) > 0) {
         # Run DSS on all sites in batch
-        dss_results <- dss_model(counts_summary)
+        dss_results <- dss_model(dss_data$counts)
         
         # Explicit fail-safe join by site_idx
-        matched_output <- sites_indexed %>%
+        matched_output <- dss_data$sites %>%
             dplyr::left_join(dss_results, by = "site_idx")
         
         # Populate output_df directly

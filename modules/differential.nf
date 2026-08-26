@@ -1,5 +1,5 @@
 process CALL_MODEL {
-    label 'single_cpu_long'
+    label { params.method == 'dss' ? 'medium_cpu' : 'single_cpu_long' }
     publishDir "${params.outdir}/differential", mode: params.publish_dir_mode
 
     input:
