@@ -319,27 +319,15 @@ fetch_dss_counts <- function(start, end, sites_db, reads_db, threshold) {
 process_modification_site <- function(df, model_type="none") {
     if (model_type == "adaptive_binomial") {
         dispersion <- get_dispersion(df)
-        if (dispersion <= 1.0) {
-            # run binomial model
-            output_df <- run_model(df, "binomial")
-        } else if (dispersion > 1.0) {
+        if (!is.na(dispersion) && dispersion > 1.0) {
             # run beta-binomial with binomial fallback
             output_df <- run_model(df, "beta_binomial")
             if (isTRUE(output_df$error)) {
                 output_df <- run_model(df, "binomial")
             }
         } else {
-            # could not determine model - produce error
-            output_df <- data.frame(
-                estimate = NA_real_,
-                std_err = NA_real_,
-                test_statistic = NA_real_,
-                p_value = NA_real_,
-                drop = FALSE,
-                model_type = "none",
-                error = TRUE,
-                error_message = sprintf("Could not determine model for dispersion: %f", dispersion)
-            )
+            # dispersion <= 1.0 or NaN (e.g. unreplicated 1 vs 1) - run binomial model
+            output_df <- run_model(df, "binomial")
         }
     } else {
         output_df <- run_model(df, model_type)
