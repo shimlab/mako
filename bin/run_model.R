@@ -135,10 +135,13 @@ dss_model <- function(counts_df, threads = NULL) {
     bsseq_data <- DSS::makeBSseqData(bsseq_list, sampleNames = all_samples)
     
     # Run DSS
+    # In DSS::DMLtest, diff is computed as mu(group1) - mu(group2).
+    # To match standard treatment vs control effect convention (Treatment - Control),
+    # we pass group1 = treated_samples and group2 = control_samples.
     dml_results <- DSS::DMLtest(
         bsseq_data,
-        group1     = control_samples,
-        group2     = treated_samples,
+        group1     = treated_samples,
+        group2     = control_samples,
         smoothing  = FALSE,
         equal.disp = use_equal_disp,
         ncores     = n_cores
