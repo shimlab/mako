@@ -67,17 +67,18 @@ process SITE_SELECTION {
     path(gtf)
 
     output:
-    tuple path("sites.duckdb"), path("segments.csv")
+    path("sites.duckdb"), emit: sites_db
+    path("segments.csv"), emit: segments, optional: true
 
     script:
     """
-    # Select sites for differential analysis (batch-size 0 is a special case for a single batch with all sites)
+    # Select sites for differential analysis based on the prepared data
     select_sites.py \\
         --in-db ${database} \\
         --out-db sites.duckdb \\
         --min-reads-per-sample ${params.min_reads_per_sample} \\
         --segments segments.csv \\
-        --batch-size ${params.method == 'dss' ? 0 : 75000} \\
+        ${params.method == 'dss' ? '--pooled' : '--batch-size 75000'} \\
         --output-file segments.csv
     
     map_to_genome.R sites.duckdb ${gtf}

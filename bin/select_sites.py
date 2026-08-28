@@ -85,11 +85,17 @@ def main():
         default=5,
         help="Minimum number of reads required per sample at a site (default: 5)",
     )
-    parser.add_argument(
+    segmentation = parser.add_mutually_exclusive_group()
+    segmentation.add_argument(
         "--batch-size",
         type=int,
         default=400000,
         help="Approximate interval size for each batch (default: 400000)",
+    )
+    segmentation.add_argument(
+        "--pooled",
+        action="store_true",
+        help="Skip segmentation entirely; the caller processes all selected sites in a single pooled run",
     )
     parser.add_argument(
         "--output-file",
@@ -110,22 +116,20 @@ def main():
 
     print(f"Selected {num_sites} sites meeting criteria", file=sys.stderr)
 
-    # split the sites into chunks based on batch_size (0 = all sites in single segment)
-    if args.batch_size <= 0 or num_sites <= args.batch_size:
-        num_segments = 1
-    else:
+    if not args.pooled:
+        # split the sites into chunks based on batch_size
         num_segments = (num_sites + args.batch_size - 1) // args.batch_size
 
-    segments = [
-        (i * num_sites // num_segments, (i + 1) * num_sites // num_segments - 1)
-        for i in range(num_segments)
-    ]
+        segments = [
+            (i * num_sites // num_segments, (i + 1) * num_sites // num_segments - 1)
+            for i in range(num_segments)
+        ]
 
-    with open(args.output_file, "w") as f:
-        # Output segments in CSV format
-        f.write("start,end\n")
-        for segment in segments:
-            f.write(f"{segment[0]},{segment[1]}\n")
+        with open(args.output_file, "w") as f:
+            # Output segments in CSV format
+            f.write("start,end\n")
+            for segment in segments:
+                f.write(f"{segment[0]},{segment[1]}\n")
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ nextflow.enable.dsl = 2
 include { SAMTOOLS_SORT_INDEX ; SAMTOOLS_FLAGSTAT ; EXTRACT_MODIFICATIONS } from './modules/caller/dorado'
 include { PREP_FROM_MODBAM ; PREP_FROM_TABLE ; SITE_SELECTION } from './modules/dataprep'
 include { PREP_COVERAGE } from './modules/coverage'
-include { CALL_MODEL ; FDR_CORRECTION } from './modules/differential'
+include { RUN_MODEL_CHUNKED ; RUN_MODEL_POOLED ; FDR_CORRECTION } from './modules/differential'
 include { FLAGSTAT ; FASTQC ; NANOPLOT ; NANOCOMP } from './modules/qc'
 include { RETRIEVE_FILE; REMOVE_FILE } from './modules/caller/fs'
 include { MAKOVIEW_INIT; MAKOVIEW_CREATE_LAUNCH_SCRIPT } from './modules/makoview'
@@ -166,17 +166,26 @@ docs:   https://shimlab.github.io/mako
     // differential analysis (caller-agnostic, single-method)
     // ======================
 
-    // site_selection_ch: [selected_sites.db, segments.csv]
-    site_selection_ch = SITE_SELECTION(reads_ch, file(params.gtf))
+    SITE_SELECTION(reads_ch, file(params.gtf))
+    sites_db_ch = SITE_SELECTION.out.sites_db
 
-    segments_ch = reads_ch
-        .combine(site_selection_ch)
-        .flatMap { reads_db, sites_db, segments_file ->
-            def seg = segments_file.splitCsv(header: true, sep: ',')
-            seg.collect { row -> [sites_db, reads_db, row.start, row.end, file(params.gtf)] }
-        }
+    if (params.method == 'dss') {
+        pooled_ch = sites_db_ch
+            .combine(reads_ch)
+            .map { sites_db, reads_db -> [sites_db, reads_db, file(params.gtf)] }
 
-    diff_ch = CALL_MODEL(segments_ch).collect()
+        diff_ch = RUN_MODEL_POOLED(pooled_ch).collect()
+    } else {
+        segments_ch = reads_ch
+            .combine(sites_db_ch)
+            .combine(SITE_SELECTION.out.segments)
+            .flatMap { reads_db, sites_db, segments_file ->
+                def seg = segments_file.splitCsv(header: true, sep: ',')
+                seg.collect { row -> [sites_db, reads_db, row.start, row.end, file(params.gtf)] }
+            }
+
+        diff_ch = RUN_MODEL_CHUNKED(segments_ch).collect()
+    }
 
     completed_ch = FDR_CORRECTION(diff_ch)
 
