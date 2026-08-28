@@ -60,7 +60,6 @@ beta_binomial_model <- function(df) {
     return(result)
 }
 
-
 # ==============================
 # Utility functions
 # ==============================
