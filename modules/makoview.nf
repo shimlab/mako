@@ -12,8 +12,6 @@ process MAKOVIEW_INIT {
     output:
     val relative_gtf_file, emit: gtf_file
     val relative_genome_file, emit: genome_file
-    // emitting paths here so they are published
-    path "makoview_venv"
     
     script:
     relative_gtf_file = "ref/${gtf.name}"
@@ -21,6 +19,10 @@ process MAKOVIEW_INIT {
 
     """
     set -euxo pipefail
+
+    cd ${launchDir}
+    mkdir -p "${params.outdir}/makoview/ref"
+    cd "${params.outdir}/makoview"
 
     python -m venv makoview_venv
     
@@ -30,10 +32,6 @@ process MAKOVIEW_INIT {
     # create symlinks to gtf and genome files
     GTF_PATH=\$(realpath "${gtf}")
     GENOME_PATH=\$(realpath "${genome}")
-
-    cd ${launchDir}
-    mkdir -p "${params.outdir}/makoview/ref"
-    cd "${params.outdir}/makoview"
 
     ln -s \$GTF_PATH $relative_gtf_file
     ln -s \$GENOME_PATH $relative_genome_file
@@ -48,8 +46,6 @@ process MAKOVIEW_INIT {
     relative_genome_file = "ref/${genome.name}"
 
     """
-    mkdir makoview_venv
-    touch makoview_venv/stub.txt
     """
 }
 
