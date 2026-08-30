@@ -33,8 +33,10 @@ process MAKOVIEW_INIT {
     GTF_PATH=\$(realpath "${gtf}")
     GENOME_PATH=\$(realpath "${genome}")
 
-    ln -s \$GTF_PATH $relative_gtf_file
-    ln -s \$GENOME_PATH $relative_genome_file
+    # if the symlinks already exist, don't fail - just continue silently
+    # chances are, these were created by a previous invocation of this process
+    ln -s \$GTF_PATH $relative_gtf_file || true
+    ln -s \$GENOME_PATH $relative_genome_file || true
 
     makoview init \
         --gtf ${relative_gtf_file} \
