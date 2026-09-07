@@ -20,6 +20,10 @@ process MAKOVIEW_INIT {
     """
     set -euxo pipefail
 
+    # get real path of GTF and genome files, as they are symlinks
+    GTF_PATH=\$(realpath "${gtf}")
+    GENOME_PATH=\$(realpath "${genome}")
+
     cd ${launchDir}
     mkdir -p "${params.outdir}/makoview/ref"
     cd "${params.outdir}/makoview"
@@ -29,18 +33,14 @@ process MAKOVIEW_INIT {
     source makoview_venv/bin/activate
     pip install makoview==0.2.3
 
-    # create symlinks to gtf and genome files
-    GTF_PATH=\$(realpath "${gtf}")
-    GENOME_PATH=\$(realpath "${genome}")
-
     # if the symlinks already exist, don't fail - just continue silently
     # chances are, these were created by a previous invocation of this process
     ln -s \$GTF_PATH $relative_gtf_file || true
     ln -s \$GENOME_PATH $relative_genome_file || true
 
     makoview init \
-        --gtf ${relative_gtf_file} \
-        --genome ${relative_genome_file}
+        --gtf "${relative_gtf_file}" \
+        --genome "${relative_genome_file}"
     """
 
     stub:
