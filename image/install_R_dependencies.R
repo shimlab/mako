@@ -17,6 +17,9 @@ install.packages(c(
     "duckdb",
     "optparse",
     "nanoparquet",
+    # report rendering (Quarto's knitr engine)
+    "knitr",
+    "rmarkdown",
     # statistics libraries
     "nlme",
     "lmerTest",

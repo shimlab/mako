@@ -12,7 +12,7 @@ process SAMTOOLS_SORT_INDEX {
 
     script:
     """
-    # Sort and index the bam file (required for downstream analysis with modkit etc)
+    # Sort and index the bam file (required for downstream analysis)
     samtools sort -o basecalled_sorted.bam ${bam}
     samtools index basecalled_sorted.bam
     """

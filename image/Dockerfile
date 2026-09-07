@@ -43,22 +43,18 @@ RUN apt-get update \
 COPY python_requirements.txt .
 RUN pip install --break-system-packages -r python_requirements.txt
 
-# install Modkit v0.5.0
-RUN wget "https://github.com/nanoporetech/modkit/releases/download/v0.5.0/modkit_v0.5.0_u16_x86_64.tar.gz" -O modkit.tar.gz \
-    && mkdir modkit && tar -xzf modkit.tar.gz --strip-components=1 -C modkit && rm modkit.tar.gz
-
-# We will use the official ONT Dorado Docker images at https://hub.docker.com/r/nanoporetech/dorado/, which are
-# prebuilt and can save on image build time and size.
+RUN wget "https://github.com/quarto-dev/quarto-cli/releases/download/v1.8.26/quarto-1.8.26-linux-amd64.deb" -O quarto.deb \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends ./quarto.deb \
+    && rm quarto.deb && rm -rf /var/lib/apt/lists/*
 
 # install R dependencies
 COPY install_R_dependencies.R .
 RUN Rscript install_R_dependencies.R
 
 # Verify critical R packages load cleanly in a fresh isolated R session
-RUN Rscript -e "library(DSS); library(GenomicFeatures); library(txdbmaker); cat('=== R dependencies verified ===\n')"
-
-# move files to PATH
-RUN ln -s $(realpath modkit/modkit) /usr/local/bin/modkit
+RUN Rscript -e "library(DSS); library(GenomicFeatures); library(txdbmaker); library(rmarkdown);" \
+    && quarto check
 
 # install duckdb CLI
 RUN wget "https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-linux-amd64.zip" -O duckdb.zip \

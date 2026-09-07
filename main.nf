@@ -94,9 +94,9 @@ docs:   https://shimlab.github.io/mako
         NANOPLOT(sorted_bam_ch.map { v -> [v[0], v[2], v[3]] } )
         NANOCOMP(sorted_bam_ch.map { v -> v[2] }.collect(sort: true), sorted_bam_ch.map { v -> v[3] }.collect(sort: true))
 
-        modkit_extract_ch = EXTRACT_MODIFICATIONS(sorted_bam_ch, file(params.transcriptome))
+        extracted_modifications_ch = EXTRACT_MODIFICATIONS(sorted_bam_ch, file(params.transcriptome))
 
-        extracted_sites_ch = modkit_extract_ch
+        extracted_sites_ch = extracted_modifications_ch
             .collectFile(keepHeader: true, skip: 1) {
                 it -> ["extracted_sites.csv","sample_name,group,file_path\n${it[0]},${it[1]},${it[2]}\n"]
             }
@@ -137,7 +137,7 @@ docs:   https://shimlab.github.io/mako
         NANOPLOT(sorted_bam_ch.map { v -> [v[0], v[2], v[3]] } )
         NANOCOMP(sorted_bam_ch.map { v -> v[2] }.collect(sort: true), sorted_bam_ch.map { v -> v[3] }.collect(sort: true))
 
-        // NOTE: no MODKIT_PILEUP/MODKIT_EXTRACT here -- table format supplies its own
+        // NOTE: no EXTRACT_MODIFICATIONS here -- table format supplies its own
         // per-read modification calls via path_csv, it doesn't need BAM-tag extraction.
 
         tsv_sites_ch = samples_ch
