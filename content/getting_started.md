@@ -69,15 +69,8 @@ H69,sclc_a,example_data/H69.filtered.bam
 
 ## 4. Run Mako
 
-On real data, Mako should be run on an HPC system with an appropriate job executor, such as SLURM.
-More information on how to run Mako on your specific system can be found in [Deployment](deployment.md).
-
-In short: Mako requires either Singularity or Docker; beyond that, you should use your HPC's job executor or,
-if your institution supports it, a pre-made `nf-core/configs` configuration.
-
-**However, for this example**, we will run it on a single node. Ensure your node has at least 16 CPU cores and 64GB RAM (for
-instance, for SLURM, by using `sinteractive --cpus-per-task=16 --mem=64G --time=0:30:00`). The expected runtime for this example
-dataset is ~10 minutes.
+Depending on whether you have Singularity or Docker, please use the corresponding commands below to run Mako. Please provide at least 16 CPU cores and 16GB of RAM (for
+instance, for SLURM, by using `sinteractive --cpus-per-task=16 --mem=16G`). The expected runtime for this example is ~10 minutes.
 
 === "Singularity (Apptainer)"
     ```bash
@@ -112,6 +105,13 @@ dataset is ~10 minutes.
 Among various Mako outputs, the differential modification analysis output is stored in `results/differential/model_calls.tsv`. 
 
 For further description of outputs, please see [Output](output.md).
+
+!!! tip
+    Whilst Mako can be ran locally, Mako is designed to be run on an HPC system with an appropriate job executor, such as SLURM.
+    More information on how to run Mako on your specific system can be found in [Deployment](deployment.md).
+
+    In short: Mako requires either Singularity or Docker; beyond that, you should use your HPC's job executor or,
+    if your institution supports it, a pre-made `nf-core/configs` configuration.
 
 ## 5. Run Makoview
 
