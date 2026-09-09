@@ -54,7 +54,7 @@ RUN Rscript install_R_dependencies.R
 
 # Verify critical R packages load cleanly in a fresh isolated R session
 RUN Rscript -e "library(DSS); library(GenomicFeatures); library(txdbmaker); library(rmarkdown);" \
-    && quarto check
+    && quarto check knitr
 
 # install duckdb CLI
 RUN wget "https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-linux-amd64.zip" -O duckdb.zip \

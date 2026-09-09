@@ -9,12 +9,13 @@ nextflow.enable.dsl = 2
 
 // IMPORTS
 include { SAMTOOLS_SORT_INDEX ; SAMTOOLS_FLAGSTAT ; EXTRACT_MODIFICATIONS } from './modules/caller/dorado'
-include { PREP_FROM_MODBAM ; PREP_FROM_TABLE ; SITE_SELECTION } from './modules/dataprep'
+include { PREP_FROM_MODBAM ; PREP_FROM_TABLE ; SITE_SELECTION ; EXTRACT_GTF_FEATURES } from './modules/dataprep'
 include { PREP_COVERAGE } from './modules/coverage'
 include { RUN_MODEL_CHUNKED ; RUN_MODEL_POOLED ; FDR_CORRECTION } from './modules/differential'
 include { FLAGSTAT ; FASTQC ; NANOPLOT ; NANOCOMP } from './modules/qc'
 include { RETRIEVE_FILE; REMOVE_FILE } from './modules/caller/fs'
 include { MAKOVIEW_INIT; MAKOVIEW_CREATE_LAUNCH_SCRIPT } from './modules/makoview'
+include { CREATE_METAGENE } from './modules/metagene'
 
 // SCHEMA VALIDATION
 include { validateParameters ; paramsSummaryLog ; paramsHelp } from 'plugin/nf-schema'
@@ -189,11 +190,13 @@ docs:   https://shimlab.github.io/mako
 
     completed_ch = FDR_CORRECTION(diff_ch)
 
+    // extract GTF features into a standalone database for Makoview
+    gtf_db_ch = EXTRACT_GTF_FEATURES(file(params.gtf))
+
     // initialise Makoview index
-    makoview_init_results_ch = MAKOVIEW_INIT(file(params.gtf), file(params.genome))
+    makoview_init_results_ch = MAKOVIEW_INIT(file(params.genome))
 
     MAKOVIEW_CREATE_LAUNCH_SCRIPT(
-        makoview_init_results_ch.gtf_file,
         makoview_init_results_ch.genome_file,
         completed_ch
     )

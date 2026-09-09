@@ -18,7 +18,7 @@ def initialise_db(conn, in_db_path):
     conn.execute(f"ATTACH '{in_db_path}' AS all_sites (READONLY);")
 
 
-def select_sites(conn, min_reads_per_sample):
+def select_sites(conn, min_reads_per_sample, mod_threshold):
     # get number of unique samples in reads_summary
     max_sample_count = conn.execute(
         "SELECT COUNT(DISTINCT sample_name) FROM all_sites.reads"
@@ -26,7 +26,7 @@ def select_sites(conn, min_reads_per_sample):
 
     print(f"number of unique samples: {max_sample_count}", file=sys.stderr)
 
-    conn.execute("""
+    conn.execute(f"""
     CREATE TABLE sample_sites AS
     SELECT 
         rname,
@@ -34,6 +34,7 @@ def select_sites(conn, min_reads_per_sample):
         transcript_position,
         sample_name,
         COUNT(*) AS read_count,
+        COUNT(*) FILTER (WHERE probability_modified >= {mod_threshold}) AS num_modified,
         MAX(probability_modified) as max_prob,
         MIN(probability_modified) as min_prob,
         AVG(probability_modified) as avg_probability_modified,
@@ -51,6 +52,7 @@ def select_sites(conn, min_reads_per_sample):
         transcript_position,
         COUNT(DISTINCT sample_name) AS sample_count,
         SUM(read_count) AS total_read_count,
+        SUM(num_modified) AS total_num_modified,
         MAX(max_prob) as max_prob,
         MIN(min_prob) as min_prob,
         AVG(avg_probability_modified) as avg_probability_modified,
@@ -85,6 +87,12 @@ def main():
         default=5,
         help="Minimum number of reads required per sample at a site (default: 5)",
     )
+    parser.add_argument(
+        "--modification-threshold",
+        type=float,
+        default=0.5,
+        help="Probability at or above which a read is considered modified (default: 0.5)",
+    )
     segmentation = parser.add_mutually_exclusive_group()
     segmentation.add_argument(
         "--batch-size",
@@ -111,7 +119,9 @@ def main():
     conn.execute("SET memory_limit = '19GB';")
     initialise_db(conn, args.in_db)
 
-    num_sites = select_sites(conn, args.min_reads_per_sample)
+    num_sites = select_sites(
+        conn, args.min_reads_per_sample, args.modification_threshold
+    )
     conn.close()
 
     print(f"Selected {num_sites} sites meeting criteria", file=sys.stderr)
