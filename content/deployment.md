@@ -4,9 +4,9 @@ hide:
   - navigation
 ---
 
-Mako is a Nextflow pipeline intended to be deployed on high performance computing (HPC) systems. For supported scheduler systems, see the [Nextflow documentation (Executors)](https://www.nextflow.io/docs/latest/executor.html). The pipeline was tested to work with the [SLURM workload manager](https://slurm.schedmd.com/overview.html).
+Mako is a Nextflow pipeline intended to be deployed on high performance computing (HPC) systems.
 
-### Execution profiles
+## Profiles
 
 This pipeline supports the [nf-core/configs pre-made configurations](https://nf-co.re/configs/), as well as a custom pre-configured profile for the University of Melbourne's Spartan HPC.
 
@@ -21,6 +21,17 @@ nextflow run main.nf -profile [institution]
 # typically, HPC systems nowadays use Singularity/Apptainer, which is preferred.
 nextflow run main.nf -profile docker
 nextflow run main.nf -profile singularity
+```
+
+## Executors
+By default when running with the `-profile docker` or `-profile singularity` setting, no [executor](https://docs.seqera.io/nextflow/executor) is set and all jobs will be run locally. It is recommended to run Mako with the executor for your HPC scheduler, such as [SLURM](https://slurm.schedmd.com/overview.html), [PBS](https://www.siemens.com/en-us/products/hpcworks/pbs-professional/), [LSF](https://www.ibm.com/docs/en/spectrum-lsf/10.1.0?topic=lsf-session-scheduler), or the [Sun Grid Engine](https://computing.sas.upenn.edu/gpc/job/sge).
+
+If you are using a preconfigured profile, such as `-profile spartan` or the profiles in `nf-core/configs`, there is a good chance the profile will configure an executor for you by default. If using an executor, you should run `nextflow` from a **login node**, as the executor will manage compute allocation for you.
+
+If you do not use an executor, you should run Mako in an environment (e.g. SLURM node) with at least 16 CPUs and call Mako with:
+
+```sh
+nextflow run main.nf -profile docker|singularity -process.cpus 16 
 ```
 
 ## Containerisation

@@ -5,10 +5,8 @@ hide:
 ---
 
 !!! warning "Work in progress"
-    **mako** is in active development and not all features are supported yet. Key features that need to be implemented:
-
-    - Certain QC visualisations, such as the metagene plot
-
+    **mako** is in active development. While the core pipeline has been implemented and tested, not all features are supported yet:
+    - The metagene plot visualisation
     Bug reports are highly welcome and we would greatly appreciate they be sent to our [GitHub Issues tracker](https://github.com/shimlab/mako/issues).
 
 ## Samplesheet
