@@ -157,7 +157,7 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
 # ==============================
 
 process_modification_site <- function(df, model_type="none") {
-    if (model_type == "adaptive_binomial") {
+    if (model_type == "adaptive") {
         dispersion <- get_dispersion(df)
         if (!is.na(dispersion) && dispersion > 1.0) {
             # run beta-binomial with binomial fallback
@@ -281,7 +281,7 @@ get_args <- function() {
         ),
         make_option(c("--model"),
             type = "character",
-            help = "Statistical model to use: adaptive_binomial, binomial, or beta_binomial [default=%default]", metavar = "character"
+            help = "Statistical model to use: adaptive, binomial, or beta_binomial [default=%default]", metavar = "character"
         ),
         make_option(c("--gtf"),
             type = "character", default = NULL,
