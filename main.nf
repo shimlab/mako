@@ -9,12 +9,13 @@ nextflow.enable.dsl = 2
 
 // IMPORTS
 include { SAMTOOLS_SORT_INDEX ; SAMTOOLS_FLAGSTAT ; EXTRACT_MODIFICATIONS } from './modules/caller/dorado'
-include { PREP_FROM_MODBAM ; PREP_FROM_TABLE ; SITE_SELECTION } from './modules/dataprep'
+include { PREP_FROM_MODBAM ; PREP_FROM_TABLE ; SITE_SELECTION ; EXTRACT_GTF_FEATURES } from './modules/dataprep'
 include { PREP_COVERAGE } from './modules/coverage'
-include { CALL_MODEL ; FDR_CORRECTION } from './modules/differential'
+include { RUN_MODEL_CHUNKED ; RUN_MODEL_POOLED ; FDR_CORRECTION } from './modules/differential'
 include { FLAGSTAT ; FASTQC ; NANOPLOT ; NANOCOMP } from './modules/qc'
 include { RETRIEVE_FILE; REMOVE_FILE } from './modules/caller/fs'
 include { MAKOVIEW_INIT; MAKOVIEW_CREATE_LAUNCH_SCRIPT } from './modules/makoview'
+include { CREATE_METAGENE } from './modules/metagene'
 
 // SCHEMA VALIDATION
 include { validateParameters ; paramsSummaryLog ; paramsHelp } from 'plugin/nf-schema'
@@ -94,9 +95,9 @@ docs:   https://shimlab.github.io/mako
         NANOPLOT(sorted_bam_ch.map { v -> [v[0], v[2], v[3]] } )
         NANOCOMP(sorted_bam_ch.map { v -> v[2] }.collect(sort: true), sorted_bam_ch.map { v -> v[3] }.collect(sort: true))
 
-        modkit_extract_ch = EXTRACT_MODIFICATIONS(sorted_bam_ch, file(params.transcriptome))
+        extracted_modifications_ch = EXTRACT_MODIFICATIONS(sorted_bam_ch, file(params.transcriptome))
 
-        extracted_sites_ch = modkit_extract_ch
+        extracted_sites_ch = extracted_modifications_ch
             .collectFile(keepHeader: true, skip: 1) {
                 it -> ["extracted_sites.csv","sample_name,group,file_path\n${it[0]},${it[1]},${it[2]}\n"]
             }
@@ -137,7 +138,7 @@ docs:   https://shimlab.github.io/mako
         NANOPLOT(sorted_bam_ch.map { v -> [v[0], v[2], v[3]] } )
         NANOCOMP(sorted_bam_ch.map { v -> v[2] }.collect(sort: true), sorted_bam_ch.map { v -> v[3] }.collect(sort: true))
 
-        // NOTE: no MODKIT_PILEUP/MODKIT_EXTRACT here -- table format supplies its own
+        // NOTE: no EXTRACT_MODIFICATIONS here -- table format supplies its own
         // per-read modification calls via path_csv, it doesn't need BAM-tag extraction.
 
         tsv_sites_ch = samples_ch
@@ -166,25 +167,36 @@ docs:   https://shimlab.github.io/mako
     // differential analysis (caller-agnostic, single-method)
     // ======================
 
-    // site_selection_ch: [selected_sites.db, segments.csv]
-    site_selection_ch = SITE_SELECTION(reads_ch, file(params.gtf))
+    SITE_SELECTION(reads_ch, file(params.gtf))
+    sites_db_ch = SITE_SELECTION.out.sites_db
 
-    segments_ch = reads_ch
-        .combine(site_selection_ch)
-        .flatMap { reads_db, sites_db, segments_file ->
-            def seg = segments_file.splitCsv(header: true, sep: ',')
-            seg.collect { row -> [sites_db, reads_db, row.start, row.end, file(params.gtf)] }
-        }
+    if (params.method == 'dss') {
+        pooled_ch = sites_db_ch
+            .combine(reads_ch)
+            .map { sites_db, reads_db -> [sites_db, reads_db, file(params.gtf)] }
 
-    diff_ch = CALL_MODEL(segments_ch).collect()
+        diff_ch = RUN_MODEL_POOLED(pooled_ch).collect()
+    } else {
+        segments_ch = reads_ch
+            .combine(sites_db_ch)
+            .combine(SITE_SELECTION.out.segments)
+            .flatMap { reads_db, sites_db, segments_file ->
+                def seg = segments_file.splitCsv(header: true, sep: ',')
+                seg.collect { row -> [sites_db, reads_db, row.start, row.end, file(params.gtf)] }
+            }
+
+        diff_ch = RUN_MODEL_CHUNKED(segments_ch).collect()
+    }
 
     completed_ch = FDR_CORRECTION(diff_ch)
 
+    // extract GTF features into a standalone database for Makoview
+    gtf_db_ch = EXTRACT_GTF_FEATURES(file(params.gtf))
+
     // initialise Makoview index
-    makoview_init_results_ch = MAKOVIEW_INIT(file(params.gtf), file(params.genome))
+    makoview_init_results_ch = MAKOVIEW_INIT(file(params.genome))
 
     MAKOVIEW_CREATE_LAUNCH_SCRIPT(
-        makoview_init_results_ch.gtf_file,
         makoview_init_results_ch.genome_file,
         completed_ch
     )

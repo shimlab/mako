@@ -6,50 +6,42 @@ process MAKOVIEW_INIT {
     container ''
 
     input:
-    path gtf
     path genome
 
     output:
-    val relative_gtf_file, emit: gtf_file
     val relative_genome_file, emit: genome_file
-    // emitting paths here so they are published
-    path "makoview_venv"
     
     script:
-    relative_gtf_file = "ref/${gtf.name}"
     relative_genome_file = "ref/${genome.name}"
 
     """
     set -euxo pipefail
 
-    python -m venv makoview_venv
-    
-    source makoview_venv/bin/activate
-    pip install makoview==0.2.3
-
-    # create symlinks to gtf and genome files
-    GTF_PATH=\$(realpath "${gtf}")
+    # get real path of the genome file, as it is a symlink
     GENOME_PATH=\$(realpath "${genome}")
 
     cd ${launchDir}
     mkdir -p "${params.outdir}/makoview/ref"
     cd "${params.outdir}/makoview"
 
-    ln -s \$GTF_PATH $relative_gtf_file
-    ln -s \$GENOME_PATH $relative_genome_file
+    python -m venv makoview_venv
+    
+    source makoview_venv/bin/activate
+    
+    pip install makoview==0.2.4.1
+
+    # if the symlink already exists, don't fail - just continue silently
+    # chances are, it was created by a previous invocation of this process
+    ln -s \$GENOME_PATH $relative_genome_file || true
 
     makoview init \
-        --gtf ${relative_gtf_file} \
-        --genome ${relative_genome_file}
+        --genome "${relative_genome_file}"
     """
 
     stub:
-    relative_gtf_file = "ref/${gtf.name}"
     relative_genome_file = "ref/${genome.name}"
 
     """
-    mkdir makoview_venv
-    touch makoview_venv/stub.txt
     """
 }
 
@@ -60,7 +52,6 @@ process MAKOVIEW_CREATE_LAUNCH_SCRIPT {
     container ''
 
     input:
-    val gtf_file
     val genome_file
     val _ready
 
@@ -79,7 +70,7 @@ process MAKOVIEW_CREATE_LAUNCH_SCRIPT {
 
     makoview serve \\
         --genome   ${genome_file} \\
-        --gtf      ${gtf_file} \\
+        --gtf_db   ../db/gtf_features.duckdb \\
         --sites    ../differential/sites.duckdb \\
         --coverage ../db/coverage.duckdb \\
         --reads    ../db/reads.duckdb \\

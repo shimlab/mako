@@ -4,8 +4,6 @@ suppressPackageStartupMessages({
     library(tidyverse)
     library(duckdb)
     library(optparse)
-    library(nlme)
-    library(aod)
     library(nanoparquet)
     library(glmmTMB)
 })
@@ -14,42 +12,6 @@ suppressPackageStartupMessages({
 # ==============================
 # Models
 # ==============================
-
-# homoscedastic Gaussian model
-homo_norm_model <- function(df) {
-    model <- lm(logit ~ group_name, data = df)
-    coefs <- summary(model)$coefficients
-
-    result <- data.frame(
-        estimate = coefs[2, "Estimate"],
-        std_err = coefs[2, "Std. Error"],
-        test_statistic = coefs[2, "t value"],
-        p_value = coefs[2, "Pr(>|t|)"],
-        drop = FALSE
-    )
-    
-    return(result)
-}
-
-hetero_norm_model <- function(df) {
-    model <- gls(
-        logit ~ group_name,
-        data = df,
-        weights = varIdent(form = ~ 1 | sample_name), method = "ML"
-    )
-
-    coefs <- summary(model)$tTable
-
-    result <- data.frame(
-        estimate = coefs[2, "Value"],
-        std_err = coefs[2, "Std.Error"],
-        test_statistic = coefs[2, "t-value"],
-        p_value = coefs[2, "p-value"],
-        drop = FALSE
-    )
-    
-    return(result)
-}
 
 binomial_model <- function(df) {
     agg_df <- binarize(df)
@@ -97,7 +59,6 @@ beta_binomial_model <- function(df) {
     
     return(result)
 }
-
 
 # ==============================
 # Utility functions
@@ -196,29 +157,17 @@ fetch_dataframe <- function(start, end, sites_db, reads_db) {
 # ==============================
 
 process_modification_site <- function(df, model_type="none") {
-    if (model_type == "adaptive_binomial") {
+    if (model_type == "adaptive") {
         dispersion <- get_dispersion(df)
-        if (dispersion <= 1.0) {
-            # run binomial model
-            output_df <- run_model(df, "binomial")
-        } else if (dispersion > 1.0) {
+        if (!is.na(dispersion) && dispersion > 1.0) {
             # run beta-binomial with binomial fallback
             output_df <- run_model(df, "beta_binomial")
             if (isTRUE(output_df$error)) {
                 output_df <- run_model(df, "binomial")
             }
         } else {
-            # could not determine model - produce error
-            output_df <- data.frame(
-                estimate = NA_real_,
-                std_err = NA_real_,
-                test_statistic = NA_real_,
-                p_value = NA_real_,
-                drop = FALSE,
-                model_type = "none",
-                error = TRUE,
-                error_message = sprintf("Could not determine model for dispersion: %f", dispersion)
-            )
+            # dispersion <= 1.0 or NaN (e.g. unreplicated 1 vs 1) - run binomial model
+            output_df <- run_model(df, "binomial")
         }
     } else {
         output_df <- run_model(df, model_type)
@@ -245,8 +194,6 @@ run_model <- function(df, model_type="none") {
     }
 
     model_func <- switch(model_type,
-        homo_norm = homo_norm_model,
-        hetero_norm = hetero_norm_model,
         binomial = binomial_model,
         beta_binomial = beta_binomial_model,
         stop("Unknown model type: ", model_type)
@@ -334,7 +281,7 @@ get_args <- function() {
         ),
         make_option(c("--model"),
             type = "character",
-            help = "Statistical model to use: homo_norm, hetero_norm, binomial, or beta_binomial [default=%default]", metavar = "character"
+            help = "Statistical model to use: adaptive, binomial, or beta_binomial [default=%default]", metavar = "character"
         ),
         make_option(c("--gtf"),
             type = "character", default = NULL,

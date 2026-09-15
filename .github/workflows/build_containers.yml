@@ -1,0 +1,83 @@
+name: Build and Push Containers to GHCR
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Container image tag'
+        required: true
+        default: 'new-default-model'
+
+jobs:
+  build-docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
+      owner: ${{ steps.vars.outputs.owner }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract metadata
+        id: vars
+        run: |
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          TAG="${{ inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="${{ github.ref_name }}"
+          fi
+          TAG_CLEAN=$(echo "$TAG" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g' | sed 's/^[-.]*//')
+          
+          echo "owner=${OWNER}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG_CLEAN}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker image
+        run: |
+          IMAGE_NAME="ghcr.io/${{ steps.vars.outputs.owner }}/mako_main_docker"
+          
+          docker build -t "${IMAGE_NAME}:${{ steps.vars.outputs.tag }}" ./image
+          docker push "${IMAGE_NAME}:${{ steps.vars.outputs.tag }}"
+
+  convert-to-singularity:
+    needs: build-docker
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    container:
+      image: quay.io/singularity/singularity:v4.1.0
+      options: --privileged
+    env:
+      SINGULARITY_DOCKER_USERNAME: ${{ github.actor }}
+      SINGULARITY_DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Log in to GHCR for Singularity ORAS and Docker
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            singularity registry login --username ${{ github.actor }} --password-stdin oras://ghcr.io
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            singularity registry login --username ${{ github.actor }} --password-stdin docker://ghcr.io
+
+      - name: Build Singularity SIF from Docker
+        run: |
+          set -e
+          DOCKER_IMG="docker://ghcr.io/${{ needs.build-docker.outputs.owner }}/mako_main_docker:${{ needs.build-docker.outputs.tag }}"
+          singularity build mako_main.sif "${DOCKER_IMG}"
+
+      - name: Push Singularity image (ORAS)
+        run: |
+          set -e
+          ORAS_IMG="oras://ghcr.io/${{ needs.build-docker.outputs.owner }}/mako_main_singularity"
+          singularity push mako_main.sif "${ORAS_IMG}:${{ needs.build-docker.outputs.tag }}"

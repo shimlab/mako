@@ -10,7 +10,6 @@ options(
         )
     )
 )
-options(BioC_mirror = "https://packagemanager.posit.co/bioconductor")
 
 install.packages(c(
     "data.table",
@@ -18,6 +17,9 @@ install.packages(c(
     "duckdb",
     "optparse",
     "nanoparquet",
+    # report rendering (Quarto's knitr engine)
+    "knitr",
+    "rmarkdown",
     # statistics libraries
     "nlme",
     "lmerTest",
@@ -30,9 +32,13 @@ install.packages(c(
     "twosamples"
 ))
 
-# Bioconductor packages
+# Bioconductor packages (use official Bioconductor repository and force explicit core packages)
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
-BiocManager::install("GenomicFeatures")
-BiocManager::install("txdbmaker")
+BiocManager::install(
+    c("S4Vectors", "IRanges", "GenomicRanges", "SummarizedExperiment", "bsseq", "DSS", "GenomicFeatures", "txdbmaker"),
+    update = TRUE,
+    ask = FALSE,
+    force = TRUE
+)

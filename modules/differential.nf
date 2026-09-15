@@ -1,4 +1,4 @@
-process CALL_MODEL {
+process RUN_MODEL_CHUNKED {
     label 'single_cpu_long'
     publishDir "${params.outdir}/differential", mode: params.publish_dir_mode
 
@@ -28,6 +28,36 @@ process CALL_MODEL {
     """
     mkdir segments
     echo "${start} to ${end}" > segments/${start}_to_${end}.parquet
+    """
+}
+
+process RUN_MODEL_POOLED {
+    label 'medium_cpu'
+    publishDir "${params.outdir}/differential", mode: params.publish_dir_mode
+
+    input:
+    tuple path(sites_db), path(reads_db), path(gtf)
+
+    output:
+    path("segments/pooled.parquet")
+
+    script:
+    """
+    mkdir segments
+
+    run_model_pooled.R  \\
+        --sites-database ${sites_db} \\
+        --reads-database ${reads_db} \\
+        --modification-threshold ${params.mod_threshold} \\
+        --output segments/pooled.parquet \\
+        --gtf ${gtf} \\
+        --threads ${task.cpus}
+    """
+
+    stub:
+    """
+    mkdir segments
+    echo "pooled" > segments/pooled.parquet
     """
 }
 
