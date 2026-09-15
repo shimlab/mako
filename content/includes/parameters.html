@@ -1,135 +1,125 @@
-<!-- generated via `
-  uvx nf-core pipelines schema docs -c parameter,description,default --format html | \
-    sed "s/<h2>/<h3>/g; s/<\/h2>/<\/h3>/g" | \
-    pbcopy
-` -->
-
 <h3>Input/output options</h3>
 <p>Define where the pipeline should find input data and save output data.</p>
 <table>
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>dataset_name</code></td>
-      <td>The name of this dataset, used in output files and within visualisations</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td><code>samplesheet</code></td>
-      <td>Path to comma-separated file containing information about the samples in the experiment.</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td><code>outdir</code></td>
-      <td>
-        The output directory where the results will be saved. You have to use absolute paths to storage on Cloud
-        infrastructure.
-      </td>
-      <td></td>
-    </tr>
-    <tr>
-      <td><code>publish_dir_mode</code></td>
-      <td>
-        How to copy output from the work directory to the output directory (accepted:
-        <code>copy</code>|<code>symlink</code>)
-      </td>
-      <td>copy</td>
-    </tr>
-    <tr>
-      <td><code>input_format</code></td>
-      <td>
-        Whether the input format is 'modBAM' or table (TSV) form. (accepted: <code>modbam</code>|<code>table</code>)
-      </td>
-      <td></td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dataset_name</code></td>
+<td>The name of this dataset, used in output files and within visualisations</td>
+<td></td>
+</tr>
+<tr>
+<td><code>samplesheet</code></td>
+<td>Path to comma-separated file containing information about the samples in the experiment.</td>
+<td></td>
+</tr>
+<tr>
+<td><code>outdir</code></td>
+<td>The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.</td>
+<td></td>
+</tr>
+<tr>
+<td><code>publish_dir_mode</code></td>
+<td>How to copy output from the work directory to the output directory (accepted: <code>copy</code>|<code>symlink</code>)</td>
+<td>copy</td>
+</tr>
+<tr>
+<td><code>input_format</code></td>
+<td>Whether the input format is 'modBAM' or table (TSV) form. (accepted: <code>modbam</code>|<code>table</code>)</td>
+<td></td>
+</tr>
+</tbody>
 </table>
 <h3>Pipeline parameters</h3>
 <table>
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>genome</code></td>
-      <td>Reference genome, in .fasta format</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td><code>transcriptome</code></td>
-      <td>Reference transcriptome, in .fasta format</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td><code>gtf</code></td>
-      <td>GTF annotation file</td>
-      <td></td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>genome</code></td>
+<td>Reference genome, in .fasta format</td>
+<td></td>
+</tr>
+<tr>
+<td><code>transcriptome</code></td>
+<td>Reference transcriptome, in .fasta format</td>
+<td></td>
+</tr>
+<tr>
+<td><code>gtf</code></td>
+<td>GTF annotation file</td>
+<td></td>
+</tr>
+</tbody>
 </table>
 <h3>Modification calling parameters</h3>
 <p>Settings which control which sites are selected for differential calling.</p>
 <table>
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>method</code></td>
-      <td>
-        Model to use to call differentially modified sites (accepted:
-        <code>adaptive_binomial</code>|<code>binomial</code>|<code>beta_binomial</code>)
-      </td>
-      <td>adaptive_binomial</td>
-    </tr>
-    <tr>
-      <td><code>mod_threshold</code></td>
-      <td>A passing threshold to determine a base modification.</td>
-      <td>0.5</td>
-    </tr>
-    <tr>
-      <td><code>mod_filter</code></td>
-      <td>
-        Reads with a modification probability within this interval will be filtered out and not used in the Dorado
-        model. The format should be <code>a,b</code> i.e. <code>0.2,0.8</code>. By default, no filtering is done.
-      </td>
-      <td></td>
-    </tr>
-    <tr>
-      <td><code>min_reads_per_sample</code></td>
-      <td>How many reads each sample should have at a site in order for the site to be considered.</td>
-      <td>5</td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>method</code></td>
+<td>Model to use to call differentially modified sites (accepted: <code>adaptive</code>|<code>binomial</code>|<code>beta_binomial</code>|<code>dss</code>)</td>
+<td>adaptive</td>
+</tr>
+<tr>
+<td><code>mod_threshold</code></td>
+<td>A passing threshold to determine a base modification.</td>
+<td>0.5</td>
+</tr>
+<tr>
+<td><code>mod_filter</code></td>
+<td>Reads with a modification probability within this interval will be filtered out and not used in the Dorado model. The format should be <code>a,b</code> i.e. <code>0.2,0.8</code>. By default, no filtering is done.</td>
+<td></td>
+</tr>
+<tr>
+<td><code>min_reads_per_sample</code></td>
+<td>How many reads each sample should have at a site in order for the site to be considered.</td>
+<td>5</td>
+</tr>
+</tbody>
 </table>
 <h3>Other parameters</h3>
 <table>
-  <thead>
-    <tr>
-      <th>Parameter</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>testing</code></td>
-      <td>Only activated during stub runs</td>
-      <td></td>
-    </tr>
-  </tbody>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>testing</code></td>
+<td>Only activated during stub runs</td>
+<td></td>
+</tr>
+<tr>
+<td><code>container_registry</code></td>
+<td>Container registry domain/path</td>
+<td></td>
+</tr>
+<tr>
+<td><code>container_tag</code></td>
+<td>Container image tag</td>
+<td></td>
+</tr>
+</tbody>
 </table>
