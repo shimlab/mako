@@ -72,30 +72,41 @@ $ uvx makoview --help        # or uvx --python 3.12 makoview --help
 
 [`pipx`](https://github.com/pypa/pipx) and [`uv`](https://docs.astral.sh/uv/) allow executables to be run within their own isolated environment, preventing dependency resolution issues. They are recommended over `pip install`.
 
-Makoview has three parameters:
+Makoview provides two subcommands: `init` (to index references) and `serve` (to launch the server). The server takes the following parameters:
 
 ```bash
 options:
   -h, --help            show this help message and exit
-  --differential-results DIFFERENTIAL_RESULTS
-                        Path to differential sites database file
-  --modification-db MODIFICATION_DB
-                        Path to modification database file
-  --port PORT           Port for the Shiny application (default: 8000)
+  --genome GENOME       Path to genome reference fasta
+  --gtf_db GTF_DB       Path to GTF database file
+  --sites SITES         Path to sites.duckdb
+  --coverage COVERAGE   Path to coverage.duckdb
+  --reads READS         Path to reads.duckdb
+  --fits FITS           Path to model calls file (model_calls.tsv)
+  --modified_prob_threshold MODIFIED_PROB_THRESHOLD
+                        Probability threshold above which a site is considered modified
+  --port PORT           Port for the application server (default: 8001)
+  --host HOST           Host address (default: 127.0.0.1)
 ```
 
 The default usage is as follows:
 
 ```bash
-export MAKO_OUTPUT_DIR="/data/gpfs/projects/punim0614/occheng/epi_differential/pipeline/runs/longbench/results"
-export MODCALLER="dorado"  # either "dorado" or "m6anet"
-export DIFFERENTIAL_MODEL="adaptive_binomial"
-makoview \
-  --differential-results $MAKO_OUTPUT_DIR/differential/$MODCALLER/${DIFFERENTIAL_MODEL}_fits.tsv \
-  --modification-db $MAKO_OUTPUT_DIR/modcall/$MODCALLER/all_sites.duckdb \
-  --port 8000
+export MAKO_OUTPUT_DIR="<path/to/results>"
+export REFERENCE_GENOME="<path/to/genome.fa>"
+export MOD_THRESHOLD=0.5
+
+makoview serve \
+  --genome   $REFERENCE_GENOME \
+  --gtf_db   $MAKO_OUTPUT_DIR/db/gtf_features.duckdb \
+  --sites    $MAKO_OUTPUT_DIR/differential/sites.duckdb \
+  --coverage $MAKO_OUTPUT_DIR/db/coverage.duckdb \
+  --reads    $MAKO_OUTPUT_DIR/db/reads.duckdb \
+  --fits     $MAKO_OUTPUT_DIR/differential/model_calls.tsv \
+  --port     52348 \
+  --modified_prob_threshold $MOD_THRESHOLD
 ```
 
-This will launch a web server running on port `8000`.
+This will launch a web server running on port `52348`.
 
 </details>

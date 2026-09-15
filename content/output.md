@@ -28,7 +28,7 @@ ENST00000000233.10  229                  ENST00000000233.10|ENSG00000004059.11|O
 | `std_err` | Standard error of the estimate |
 | `test_statistic` | Test statistic |
 | `p_value` | Raw p-value for the test of differential modification at this site |
-| `model_type` | Statistical model used to analyse the site (e.g. `binomial`, `homo_norm`, `hetero_norm`, `beta_binomial`) |
+| `model_type` | Statistical model used to analyse the site (e.g. `binomial`, `beta_binomial`, `dss`) |
 | `error` | Whether the model fit failed for this site (`True`/`False`) |
 | `error_message` | Error message if `error` is `True`, otherwise typically blank/NA |
 | `bh_corrected_p_value` | Benjamini–Hochberg corrected p-value |
@@ -52,6 +52,7 @@ outdir/
 │   ├── 📁 nanocomp
 ├── db
 │   ├── coverage.duckdb
+│   ├── gtf_features.duckdb
 │   └── reads.duckdb
 ├── differential
 │   ├── model_calls.tsv
@@ -63,9 +64,7 @@ outdir/
 │   └── 📁 makoview_venv
 └── modcall
     └── <sample, e.g. H146>
-        ├── modifications_H146.tsv.gz
-        ├── pileup_H146.bed.gz
-        └── pileup_H146.bed.gz.tbi
+        └── modifications_H146.tsv.gz
 ```
 
 !!! warning "Work in progress"
@@ -85,20 +84,20 @@ Per-sample basecalling and alignment QC.
 | `nanocomp/` | Cross-sample comparison (NanoComp) — read length, N50, throughput, identity, quality plots |
 
 ### `modcall/` directory
-Per-sample RNA modification analyses (modkit).
+Per-sample RNA modification analyses.
 
 | File | Description |
 |---|---|
-| `pileup_{sample}.bed.gz(.tbi)` | bedMethyl pileup of per-site modification stats |
 | `modifications_{sample}.tsv.gz` | Read-level modification analyses |
 
 ### `db/` directory
-Aggregated databases used internally by the differential step.
+Databases used internally for differential testing and downstream visualisation.
 
 | File | Description |
 |---|---|
 | `reads.duckdb` | Read-level modification data across samples |
 | `coverage.duckdb` | Per-site coverage across samples |
+| `gtf_features.duckdb` | Parsed GTF transcript and genomic feature annotations for Makoview |
 
 ### `differential/` directory
 Differential modification analysis outputs.

@@ -21,9 +21,10 @@ The software is written in Nextflow and utilises Docker/Singularity containerisa
 1. Sample and read QC
 2. Site-level aggregation, filtering, and selection
 3. Choice of differential analysis methods:
-    1. Either binomial or beta-binomial, depending on the dispersion (**default**)
-    2. Binomial
-    3. Beta-binomial
+    1. Either binomial or beta-binomial, depending on the dispersion (`adaptive`, **default**; refer to code for decision logic)
+    2. Binomial (`binomial`)
+    3. Beta-binomial (`beta_binomial`)
+    4. DSS (`dss`)
 4. False discovery rate correction
 5. Visualization of results via *makoview*
 
