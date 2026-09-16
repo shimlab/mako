@@ -28,7 +28,7 @@ process MAKOVIEW_INIT {
     
     source makoview_venv/bin/activate
     
-    pip install makoview==0.2.4.1
+    pip install makoview==0.2.4.2
 
     # if the symlink already exists, don't fail - just continue silently
     # chances are, it was created by a previous invocation of this process
