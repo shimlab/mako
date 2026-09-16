@@ -40,7 +40,9 @@ workflow {
 differential RNA modification calling
 Shim Lab @ University of Melbourne
 
-docs:   https://shimlab.github.io/mako
+version:   v1.0.0
+docs:      https://shimlab.github.io/mako
+citation:  coming soon!
     """)
 
     log.info(paramsSummaryLog(workflow))
