@@ -4,11 +4,6 @@ hide:
   - navigation
 ---
 
-!!! warning "Work in progress"
-    **mako** is in active development. While the core pipeline has been implemented and tested, not all features are supported yet:
-    - The metagene plot visualisation
-    Bug reports are highly welcome and we would greatly appreciate they be sent to our [GitHub Issues tracker](https://github.com/shimlab/mako/issues).
-
 ## Samplesheet
 
 The samplesheet is a CSV file which contains information about the samples to be analysed in the pipeline. **A header is required**.

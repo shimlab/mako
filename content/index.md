@@ -5,6 +5,10 @@ hide:
   - toc
 ---
 
+!!! warning "Work in progress"
+    **mako** is in active development. While the core pipeline has been implemented and tested, not all features are supported yet (e.g. metagene plot, etc.)
+    Bug reports are highly welcome and we would greatly appreciate they be sent to our [GitHub Issues tracker](https://github.com/shimlab/mako/issues).
+
 Mako is a bioinformatics pipeline designed for differential RNA modification analysis at the isoform resolution using Nanopore direct RNA sequencing. It takes a samplesheet and output from Dorado and/or m6Anet, and applies various statistical methods to identify differentially modified sites between experimental conditions.
 
 Mako will also produce interactive visualisations for quality control and assessment of sites through the `makoview` tool.

@@ -67,11 +67,6 @@ outdir/
         └── modifications_H146.tsv.gz
 ```
 
-!!! warning "Work in progress"
-    **mako** is in active development. While the core pipeline has been implemented and tested, not all features are supported yet:
-    - The metagene plot visualisation
-    Bug reports are highly welcome and we would greatly appreciate they be sent to our [GitHub Issues tracker](https://github.com/shimlab/mako/issues).
-
 ### `basecall/` directory
 Per-sample basecalling and alignment QC.
 
