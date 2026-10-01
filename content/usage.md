@@ -91,7 +91,7 @@ The samplesheet is a CSV file which contains information about the samples to be
     ./$OUTDIR/makoview/launch_makoview.sh
     ```
     !!! warning "Modification thresholds for m6Anet"
-        The [m6Anet documentation](https://github.com/GoekeLab/m6anet/blob/590ec277cb48d61774f0872395099e466022e810/README.md) suggests to use 0.033379376 as the threshold for individual reads to be called as modified. Always consult your tool of choice to determine this value.
+        In this snippet, the modification probability threshold 0.033379376 was the recommended value from [m6Anet documentation](https://github.com/GoekeLab/m6anet) for their HCT116_RNA002 (human) model. Suitable threshold values may differ greatly between tools/models, so we suggest always checking recommendations of tools/models used.
 
 
 Two groups should be provided to identify differential modifications between conditions. Group names should be alphanumeric and without spaces. The underlying models take the first group alphabetically as the reference level, and the second group alphabetically as the treatment level.
