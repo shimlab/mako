@@ -8,7 +8,7 @@ hide:
 
 The samplesheet is a CSV file which contains information about the samples to be analysed in the pipeline. **A header is required**.
 
-=== "modBAM input"
+=== "modBAM input (e.g. Dorado)"
     This is suitable for modifications analysed by **Dorado**.
     
     ```csv title="samplesheet.csv"
@@ -49,7 +49,7 @@ The samplesheet is a CSV file which contains information about the samples to be
     ./$OUTDIR/makoview/launch_makoview.sh
     ```
 
-=== "BAM + CSV input"
+=== "BAM + CSV input (e.g. m6Anet)"
     This is suitable for modifications analysed by **m6Anet**.
     
     ```csv title="samplesheet.csv"
